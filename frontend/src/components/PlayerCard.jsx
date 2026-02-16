@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { getClassColor, getClassIconPath, getRoleIconPath, WOW_ROLES } from '../utils/wowClasses';
 
-function PlayerCard({ player, isSelected, remoteSelection, onClick, readonly, isDragging, onEdit, onRemove }) {
+function PlayerCard({ player, onEdit, onRemove }) {
   const {
     attributes,
     listeners,
@@ -10,15 +10,17 @@ function PlayerCard({ player, isSelected, remoteSelection, onClick, readonly, is
     transform,
     transition,
     isDragging: isSortableDragging
-  } = useSortable({ id: player.id, disabled: readonly });
+  } = useSortable({ id: player.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    // only hide the original sortable node (isSortableDragging). Keep the
-    // overlay ghost visible by not depending on the external `isDragging`
-    // prop here.
-    opacity: isSortableDragging ? 0 : 1,
+    // Keep the original sortable node visible while dragging but style it
+    // as a lightweight preview: reduced opacity, dashed border and subtle
+    // diagonal stripes. We still disable pointer events while dragging.
+    opacity: isSortableDragging ? 0.6 : 1,
+    border: isSortableDragging ? '2px dashed rgba(255,255,255,0.6)' : undefined,
+    backgroundImage: isSortableDragging ? 'repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0 6px, transparent 6px 12px)' : undefined,
     pointerEvents: isSortableDragging ? 'none' : undefined,
   };
 
@@ -33,34 +35,15 @@ function PlayerCard({ player, isSelected, remoteSelection, onClick, readonly, is
   })();
 
   const roleData = WOW_ROLES.find(r => r.key === roleKey) || null;
-  const hasRemoteSelections = remoteSelection && Object.keys(remoteSelection).length > 0;
-  const firstRemote = hasRemoteSelections ? Object.values(remoteSelection)[0] : null;
-
   return (
     <div
       ref={setNodeRef}
       {...attributes}
       {...listeners}
       data-player-id={player.id}
-      className={`player-card ${isSelected ? 'selected' : ''} ${readonly ? 'readonly' : ''}`}
-      // apply remote selection visual
-      data-remote-selected={hasRemoteSelections ? '1' : '0'}
-      style={{
-        ...style,
-        ...(hasRemoteSelections ? { boxShadow: `0 0 0 3px ${firstRemote.color}33` } : {})
-      }}
+      className={`player-card`}
+      style={{ ...style }}
       tabIndex={0}
-      onDoubleClick={(e) => {
-        // if the sortable is currently dragging, don't treat pointer up as a click
-        if (isSortableDragging) return;
-        if (onClick) onClick();
-      }}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          if (onClick) onClick();
-        }
-      }}
     >
         {roleKey && getRoleIconPath(roleKey) ? (
           <img
@@ -117,23 +100,6 @@ function PlayerCard({ player, isSelected, remoteSelection, onClick, readonly, is
         {player.notes}
       </div>
 
-      {hasRemoteSelections && (
-        <div className="remote-selection-stack" aria-hidden>
-          {Object.values(remoteSelection).map((sel) => (
-            <div
-              key={sel.clientId}
-              className="remote-selection-pill"
-              style={{ background: sel.color }}
-              title={sel.clientName}
-            >
-              {sel.clientName}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Edit icon at the end */}
-      {!readonly && (
         <button
           type="button"
           className="player-edit-icon"
@@ -160,8 +126,7 @@ function PlayerCard({ player, isSelected, remoteSelection, onClick, readonly, is
             />
           </svg>
         </button>
-      )}
-      {!readonly && (
+      
         <button
           type="button"
           className="player-remove-icon"
@@ -180,7 +145,6 @@ function PlayerCard({ player, isSelected, remoteSelection, onClick, readonly, is
             <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="#ff4d4f" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-      )}
     </div>
   );
 }

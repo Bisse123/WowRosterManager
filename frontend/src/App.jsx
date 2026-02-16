@@ -1,24 +1,40 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-// import { GoogleOAuthProvider } from '@react-oauth/google';
-import CreateSession from './pages/CreateSession';
 import SessionView from './pages/SessionView';
 
 function App() {
-  // <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-  //   ...existing code...
-  // </GoogleOAuthProvider>
-  // For testing without Google authentication, use a fragment:
+  useEffect(() => {
+    const toolbar = document.querySelector('.toolbar');
+    if (!toolbar) return;
+
+    const setToolbarHeight = () => {
+      const h = Math.round(toolbar.getBoundingClientRect().height);
+      document.documentElement.style.setProperty('--toolbar-height', `${h}px`);
+    };
+
+    setToolbarHeight();
+
+    const ro = new ResizeObserver(setToolbarHeight);
+    ro.observe(toolbar);
+    window.addEventListener('resize', setToolbarHeight);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', setToolbarHeight);
+    };
+  }, []);
+  
   return (
     <>
       <Router>
         <Routes>
-          <Route path="/" element={<CreateSession />} />
+          <Route path="/" element={<SessionView sessionId={"local"} />} />
           <Route path="/session/:sessionId" element={<SessionView />} />
           <Route path="/session/:sessionId/readonly" element={<SessionView readonly={true} />} />
-          {/* Redirect /WowRosterManager/ to / */}
-          <Route path="/WowRosterManager/" element={<CreateSession />} />
+          {/* Redirect /WowRosterManager/ to root session view */}
+          <Route path="/WowRosterManager/" element={<SessionView sessionId={"local"} />} />
           {/* Catch-all route for unmatched paths */}
-          <Route path="*" element={<CreateSession />} />
+          <Route path="*" element={<SessionView sessionId={"local"} />} />
         </Routes>
       </Router>
     </>

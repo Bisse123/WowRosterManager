@@ -10,158 +10,6 @@ body {
   color: #e0e0e0;
   overflow-x: hidden;
 }
-
-/* Create Session Page */
-.create-session-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  padding: 20px;
-}
-
-.create-session-container {
-  background: #2a2a2a;
-  border: 2px solid #444;
-  border-radius: 12px;
-  padding: 40px;
-  max-width: 600px;
-  width: 100%;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-}
-
-.create-session-container h1 {
-  color: #ffd700;
-  font-size: 2.5em;
-  text-align: center;
-  margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.subtitle {
-  text-align: center;
-  color: #aaa;
-  margin-bottom: 30px;
-}
-
-.login-section, .setup-section {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.google-login-btn {
-  background: #4285f4;
-  color: white;
-  border: none;
-  padding: 15px 30px;
-  font-size: 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.google-login-btn:hover {
-  background: #357ae8;
-}
-
-.success-message {
-  background: #2d5016;
-  color: #7fef4f;
-  padding: 12px;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.input-group label {
-  font-weight: bold;
-  color: #ffd700;
-}
-
-.spreadsheet-input {
-  padding: 12px;
-  background: #1a1a1a;
-  border: 2px solid #444;
-  border-radius: 6px;
-  color: #e0e0e0;
-  font-size: 14px;
-}
-
-.spreadsheet-input:focus {
-  outline: none;
-  border-color: #ffd700;
-}
-
-.help-text {
-  font-size: 12px;
-  color: #888;
-}
-
-.help-text code {
-  background: #1a1a1a;
-  padding: 2px 6px;
-  border-radius: 3px;
-  color: #ffd700;
-}
-
-.create-btn {
-  background: linear-gradient(135deg, #ffd700, #ffed4e);
-  color: #1a1a1a;
-  border: none;
-  padding: 15px 30px;
-  font-size: 16px;
-  font-weight: bold;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.create-btn:hover:not(:disabled) {
-  transform: scale(1.05);
-}
-
-.create-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.error-message {
-  background: #5d1616;
-  color: #ff6b6b;
-  padding: 12px;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.info-box {
-  margin-top: 30px;
-  padding: 20px;
-  background: #1a1a1a;
-  border-radius: 8px;
-  border-left: 4px solid #ffd700;
-}
-
-.info-box h3 {
-  color: #ffd700;
-  margin-bottom: 10px;
-}
-
-.info-box ol {
-  padding-left: 20px;
-  color: #aaa;
-}
-
-.info-box li {
-  margin-bottom: 8px;
-}
-
 /* Session View */
 .session-view {
   min-height: 100vh;
@@ -180,6 +28,9 @@ body {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 15px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
 }
 
 .toolbar-left, .toolbar-center, .toolbar-right {
@@ -188,8 +39,6 @@ body {
   gap: 15px;
 }
 
-/* Make left toolbar columnar so username appears below the session id */
-
 .toolbar-left {
   display: flex;
   flex-direction: row;
@@ -197,66 +46,10 @@ body {
   gap: 18px;
 }
 
-.session-and-name {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-}
-
-.toolbar-username {
-  padding: 6px 8px;
-  font-size: 12px;
-  width: 160px;
-  background: #1a1a1a;
-  border: 1px solid #444;
-  border-radius: 6px;
-  color: #e0e0e0;
-}
-
-.toolbar-username:focus {
-  outline: none;
-  border-color: #ffd700;
-}
-
 .app-title {
   color: #ffd700;
   font-size: 1.5em;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.session-id {
-  font-size: 0.9em;
-  color: #888;
-  font-family: monospace;
-}
-
-.status-indicators {
-  display: flex;
-  gap: 15px;
-}
-
-.status-item {
-  padding: 6px 12px;
-  background: #1a1a1a;
-  border-radius: 6px;
-  font-size: 0.9em;
-}
-
-.status-item.connected {
-  color: #7fef4f;
-}
-
-.status-item.disconnected {
-  color: #ff6b6b;
-}
-
-.readonly-badge {
-  background: #5d5d1a;
-  color: #ffd700;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-weight: bold;
 }
 
 .toolbar-btn {
@@ -281,17 +74,6 @@ body {
   color: #7fef4f;
 }
 
-.toolbar-btn.save {
-  background: #1a3d5d;
-  border-color: #256ba8;
-  color: #4fc3f7;
-}
-
-.last-saved {
-  font-size: 0.85em;
-  color: #888;
-}
-
 /* Session Content */
 
 .session-content {
@@ -299,26 +81,24 @@ body {
   flex-direction: row;
   flex: 1;
   overflow: hidden;
-  padding: 0 24px;
-  gap: 32px;
+  padding: 0 0 0 24px;
+  gap: 32px 0;
+  height: calc(100vh - 64px);
+  flex-wrap: nowrap;
 }
 
 .roster-container {
-  flex: 2 1 0%;
+  height: calc(100vh - var(--toolbar-height, 64px));
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 20px 0;
+  padding: 20px 20px 20px 0;
+  
+  /* padding-right: 20px; */
   align-items: stretch;
   min-width: 0;
-}
-
-.sidebar {
-  width: 100px;
-  margin-left: 16px;
-  display: flex;
-  flex-direction: column;
-  height: auto;
+  overflow-y: scroll;
 }
 
 /* Roster Section */
@@ -337,7 +117,7 @@ body {
 .roster-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 8px; /* space for scrollbar */
+  padding-bottom: 8px;
 }
 
 .roster-header {
@@ -367,20 +147,13 @@ body {
 .roster-list {
   width: 100%;
   padding: 15px;
+  padding-bottom: 28px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   min-height: 0;
   max-height: none;
-}
-
-.roster-list {
   position: relative;
-}
-
-/* ensure there's space below the last player so drops below items are accepted */
-.roster-list {
-  padding-bottom: 28px;
 }
 
 .roster-list.drag-over {
@@ -442,11 +215,6 @@ body {
   background: #404040;
   border-color: #777;
   transform: translateY(-2px);
-}
-
-.player-card.selected {
-  border-color: #ffd700;
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
 }
 
 .player-card.readonly {
@@ -581,39 +349,6 @@ body {
   max-width: 100%;
 }
 
-.remote-selection-pill {
-  min-width: 36px;
-  max-width: 160px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 2px 6px;
-  border-radius: 8px;
-  font-weight: bold;
-  font-size: 12px;
-  color: #000;
-  z-index: 5;
-}
-
-/* Container that holds remote selection pills; positioned top-right and grows leftwards */
-.remote-selection-stack {
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  display: flex;
-  gap: 8px;
-  flex-direction: row-reverse; /* place newest on the right and grow left */
-  align-items: center;
-  z-index: 6;
-}
-
-.remote-selection-pill {
-  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
-  padding: 4px 8px;
-  font-size: 12px;
-  line-height: 1;
-}
-
 .player-edit-icon, .player-remove-icon {
   flex: none;
 }
@@ -624,7 +359,11 @@ body {
 }
 
 /* Sidebar */
+/* remove the fixed 64px usage and use the CSS var instead */
 .sidebar {
+  position: sticky;
+  top: 0px;
+  height: calc(100vh - var(--toolbar-height, 64px));
   width: 300px;
   background: #2a2a2a;
   border-left: 2px solid #444;
@@ -880,7 +619,6 @@ body {
     width: 100%;
     border-left: none;
     border-top: 2px solid #444;
-    /* Avoid sidebar internal scrollbar when layout stacks */
     overflow-y: visible;
     height: auto;
     max-height: none;
@@ -917,4 +655,22 @@ body {
     width: 100%;
     justify-content: center;
   }
+}
+
+.drop-preview {
+  height: 16px;
+  margin: 6px 12px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+  border: 1px dashed rgba(255,255,255,0.06);
+}
+
+.player-entry-wrapper {
+  position: relative;
+}
+
+.end-drop-sentinel {
+  height: 18px;
+  margin: 6px 12px;
+  border-radius: 6px;
 }

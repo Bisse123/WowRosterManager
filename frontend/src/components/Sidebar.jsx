@@ -1,7 +1,7 @@
 import { getRoleCounts, getClassCounts, detectRaidBuffs } from '../utils/buffDetection';
 import { WOW_CLASSES, WOW_ROLES, getRoleIconPath, getClassIconPath, getClassColor } from '../utils/wowClasses';
 
-function Sidebar({ players, searchQuery, onSearchChange, totalRosterSize }) {
+function Sidebar({ players, searchQuery, onSearchChange, mainRosterSize = 0, benchRosterSize = 0 }) {
   const roleCounts = getRoleCounts(players);
   const classCounts = getClassCounts(players);
   const buffCoverage = detectRaidBuffs(players);
@@ -11,7 +11,7 @@ function Sidebar({ players, searchQuery, onSearchChange, totalRosterSize }) {
       <div className="sidebar-section">
         <div className="roster-size">
           <span className="label">ROSTER SIZE</span>
-          <span className="value">{totalRosterSize}</span>
+          <span className="value">{mainRosterSize} + {benchRosterSize} </span>
         </div>
         <input
           type="text"
