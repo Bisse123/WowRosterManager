@@ -2,6 +2,12 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { getClassColor, getClassIconPath, getRoleIconPath, WOW_ROLES } from '../utils/wowClasses';
 
+export const ALT_SLOT_COUNT = 3;
+
+const altCols = Array.from({ length: ALT_SLOT_COUNT }, (_, i) => `var(--alt${i+1}-width, 120px)`).join(' ');
+const columns = `25px 30px var(--main-name-width, 200px) var(--main-class-width, 120px) var(--main-role-width, 120px) ${altCols} 300px 24px`;
+document.documentElement.style.setProperty('--player-card-columns', `${columns}`);
+
 function PlayerCard({ player, onEdit, onRemove }) {
   const {
     attributes,
@@ -15,26 +21,21 @@ function PlayerCard({ player, onEdit, onRemove }) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    // Keep the original sortable node visible while dragging but style it
-    // as a lightweight preview: reduced opacity, dashed border and subtle
-    // diagonal stripes. We still disable pointer events while dragging.
     opacity: isSortableDragging ? 0.6 : 1,
     border: isSortableDragging ? '2px dashed rgba(255,255,255,0.6)' : undefined,
     backgroundImage: isSortableDragging ? 'repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0 6px, transparent 6px 12px)' : undefined,
     pointerEvents: isSortableDragging ? 'none' : undefined,
   };
 
-  const classColor = getClassColor(player.class);
-  const roleKey = (() => {
-    const r = (player.mainSpecRole || '').toLowerCase();
-    if (r.includes('tank')) return 'tank';
-    if (r.includes('healer')) return 'healer';
-    if (r.includes('melee')) return 'melee';
-    if (r.includes('ranged')) return 'ranged';
-    return '';
-  })();
+  const classColor = getClassColor(player.mainClass);
 
-  const roleData = WOW_ROLES.find(r => r.key === roleKey) || null;
+  const mainRoleData = WOW_ROLES.find(r => r.key === player.mainRole) || null;
+  // Prepare alt role data for all alt slots
+  const altRoleDataArr = [];
+  for (let i = 1; i <= ALT_SLOT_COUNT; i++) {
+    const altRoleKey = `alt${i}Role`;
+    altRoleDataArr.push(WOW_ROLES.find(r => r.key === player[altRoleKey]) || null);
+  }
   return (
     <div
       ref={setNodeRef}
@@ -45,61 +46,64 @@ function PlayerCard({ player, onEdit, onRemove }) {
       style={{ ...style }}
       tabIndex={0}
     >
-        {roleKey && getRoleIconPath(roleKey) ? (
+        {mainRoleData?.key && getRoleIconPath(mainRoleData.key) ? (
           <img
-            src={getRoleIconPath(roleKey)}
-            alt={`${player.mainSpecRole} icon`}
+            src={getRoleIconPath(mainRoleData.key)}
+            alt={`${mainRoleData.name} icon`}
             className="role-icon-img"
             onError={(e) => { e.currentTarget.style.display = 'none'; }}
           />
         ) : null}
       <div className="player-icon">
-        {getClassIconPath(player.class) ? (
+        {getClassIconPath(player.mainClass) ? (
           <img
-            src={getClassIconPath(player.class)}
-            alt={`${player.class} icon`}
+            src={getClassIconPath(player.mainClass)}
+            alt={`${player.mainClass} icon`}
             className="player-icon-img"
           />
         ) : null}
       </div>
-      
+
       <div className="player-name" style={{ color: classColor }}>
-        {player.name}
+        {player.mainName}
       </div>
 
       <div className="player-class" style={{ color: classColor }}>
-        {player.class}
+        {player.mainClass}
       </div>
 
       <div className="player-spec">
         <span
           className={`role-badge`}
-          style={{ background: roleData?.bg || undefined, color: roleData?.color || undefined }}
+          style={{ background: mainRoleData?.bg || undefined, color: mainRoleData?.color || undefined }}
         >
-          {player.mainSpecRole}
+          {mainRoleData?.name || player.mainRole}
         </span>
       </div>
 
-      <div className="player-alt">
-        {player.alt1Class && (
-          <span style={{ color: getClassColor(player.alt1Class) }}>
-            {player.alt1Class} - {player.alt1SpecRole}
-          </span>
-        )}
-      </div>
-
-      <div className="player-alt">
-        {player.alt2Class && (
-          <span style={{ color: getClassColor(player.alt2Class) }}>
-            {player.alt2Class} - {player.alt2SpecRole}
-          </span>
-        )}
-      </div>
+      {[...Array(ALT_SLOT_COUNT)].map((_, i) => {
+        const altClassKey = `alt${i+1}Class`;
+        const altRoleKey = `alt${i+1}Role`;
+        const altClass = player[altClassKey];
+        const altRole = player[altRoleKey];
+        const altRoleData = altRoleDataArr[i];
+        return (
+          <div className="player-alt" key={i}>
+            {altClass && (
+              <span style={{ color: getClassColor(altClass) }}>
+                {altClass}
+                {altRole ? ` - ${(altRoleData?.name || altRole)}` : ''}
+              </span>
+            )}
+          </div>
+        );
+      })}
 
       <div className="player-notes">
         {player.notes}
       </div>
 
+      <div className="player-actions-vertical">
         <button
           type="button"
           className="player-edit-icon"
@@ -126,7 +130,7 @@ function PlayerCard({ player, onEdit, onRemove }) {
             />
           </svg>
         </button>
-      
+
         <button
           type="button"
           className="player-remove-icon"
@@ -145,6 +149,7 @@ function PlayerCard({ player, onEdit, onRemove }) {
             <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="#ff4d4f" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
+      </div>
     </div>
   );
 }

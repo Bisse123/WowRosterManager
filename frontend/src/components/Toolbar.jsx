@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react';
-
-function Toolbar({ onAddPlayer, onSave }) {
+function Toolbar({ onAddPlayer, onSave, onSort }) {
 
   return (
     <div className="toolbar">
@@ -9,10 +7,12 @@ function Toolbar({ onAddPlayer, onSave }) {
       </div>
 
       <div className="toolbar-center">
-            <button onClick={onAddPlayer} className="toolbar-btn primary">
-              ➕ Add New Player
-            </button>
-        
+        <button onClick={onAddPlayer} className="toolbar-btn primary">
+          ➕ Add New Player
+        </button>
+        <button onClick={onSort} className="toolbar-btn sort" style={{ marginLeft: 16 }} title="Sort Players">
+          ⇅ Sort Players
+        </button>
       </div>
 
       <div className="toolbar-right">

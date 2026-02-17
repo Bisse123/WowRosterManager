@@ -1,28 +1,36 @@
 import { useState, useRef, useEffect } from 'react';
-import { WOW_CLASSES } from '../utils/wowClasses';
+import { WOW_CLASSES, WOW_ROLES } from '../utils/wowClasses';
+import { ALT_SLOT_COUNT } from './PlayerCard';
+
+export function getInitialPlayerData(data = {}) {
+  const base = {
+    mainName: data.mainName || data.name || '',
+    mainClass: data.mainClass || data.class || '',
+    mainRole: data.mainRole || '',
+    status: data.status || 'Main',
+    notes: data.notes || ''
+  };
+  for (let i = 1; i <= ALT_SLOT_COUNT; i++) {
+    base[`alt${i}Class`] = data[`alt${i}Class`] || '';
+    base[`alt${i}Role`] = data[`alt${i}Role`] || '';
+  }
+  return base;
+}
+
+// ALT_SLOT_COUNT is now exported above
 
 function AddPlayerModal({ onClose, onAdd, initialData = null, onSave, existingNames = [] }) {
-  const [formData, setFormData] = useState({
-    name: initialData?.name || '',
-    class: initialData?.class || '',
-    mainSpecRole: initialData?.mainSpecRole || '',
-    alt1Class: initialData?.alt1Class || '',
-    alt1SpecRole: initialData?.alt1SpecRole || '',
-    alt2Class: initialData?.alt2Class || '',
-    alt2SpecRole: initialData?.alt2SpecRole || '',
-    status: initialData?.status || 'Main',
-    notes: initialData?.notes || ''
-  });
+  const [formData, setFormData] = useState(getInitialPlayerData(initialData || {}));
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (formData.name && formData.class && formData.mainSpecRole) {
-      const nameLower = formData.name.trim().toLowerCase();
+    if (formData.mainName && formData.mainClass && formData.mainRole) {
+      const nameLower = formData.mainName.trim().toLowerCase();
       const existingLower = (existingNames || []).map(n => String(n).toLowerCase());
-      const origLower = initialData?.name ? String(initialData.name).toLowerCase() : null;
+      const origLower = initialData?.mainName ? String(initialData.mainName).toLowerCase() : null;
       const isDuplicate = existingLower.some(n => n === nameLower && n !== origLower);
       if (isDuplicate) {
-        alert(`Player name "${formData.name}" already exists.`);
+        alert(`Player name "${formData.mainName}" already exists.`);
         return;
       }
 
@@ -34,7 +42,7 @@ function AddPlayerModal({ onClose, onAdd, initialData = null, onSave, existingNa
     }
   };
 
-  const roles = ['Tank', 'Healer', 'Melee DPS', 'Ranged DPS'];
+
 
   const overlayRef = useRef(null);
   const mouseDownOnOverlay = useRef(false);
@@ -53,17 +61,7 @@ function AddPlayerModal({ onClose, onAdd, initialData = null, onSave, existingNa
     }
   }, []);
 
-  const normalizeInitial = () => ({
-    name: initialData?.name || '',
-    class: initialData?.class || '',
-    mainSpecRole: initialData?.mainSpecRole || '',
-    alt1Class: initialData?.alt1Class || '',
-    alt1SpecRole: initialData?.alt1SpecRole || '',
-    alt2Class: initialData?.alt2Class || '',
-    alt2SpecRole: initialData?.alt2SpecRole || '',
-    status: initialData?.status || 'Main',
-    notes: initialData?.notes || ''
-  });
+  const normalizeInitial = () => getInitialPlayerData(initialData || {});
 
   const isDirty = () => {
     const init = normalizeInitial();
@@ -123,8 +121,8 @@ function AddPlayerModal({ onClose, onAdd, initialData = null, onSave, existingNa
             <input
               type="text"
               ref={nameInputRef}
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              value={formData.mainName}
+              onChange={(e) => setFormData({ ...formData, mainName: e.target.value })}
               placeholder="Character name"
               required
             />
@@ -134,8 +132,8 @@ function AddPlayerModal({ onClose, onAdd, initialData = null, onSave, existingNa
             <div className="form-group">
               <label>Class *</label>
               <select
-                value={formData.class}
-                onChange={(e) => setFormData({ ...formData, class: e.target.value })}
+                value={formData.mainClass}
+                onChange={(e) => setFormData({ ...formData, mainClass: e.target.value })}
                 required
               >
                 <option value="">Select class</option>
@@ -148,73 +146,50 @@ function AddPlayerModal({ onClose, onAdd, initialData = null, onSave, existingNa
             <div className="form-group">
               <label>Main Spec Role *</label>
               <select
-                value={formData.mainSpecRole}
-                onChange={(e) => setFormData({ ...formData, mainSpecRole: e.target.value })}
+                value={formData.mainRole}
+                onChange={(e) => setFormData({ ...formData, mainRole: e.target.value })}
                 required
               >
                 <option value="">Select role</option>
-                {roles.map(role => (
-                  <option key={role} value={role}>{role}</option>
+                {WOW_ROLES.map(role => (
+                  <option key={role.key} value={role.key}>{role.name}</option>
                 ))}
               </select>
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Alt 1 Class</label>
-              <select
-                value={formData.alt1Class}
-                onChange={(e) => setFormData({ ...formData, alt1Class: e.target.value })}
-              >
-                <option value="">None</option>
-                {WOW_CLASSES.map(cls => (
-                  <option key={cls.name} value={cls.name}>{cls.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Alt 1 Role</label>
-              <select
-                value={formData.alt1SpecRole}
-                onChange={(e) => setFormData({ ...formData, alt1SpecRole: e.target.value })}
-              >
-                <option value="">Select role</option>
-                {roles.map(role => (
-                  <option key={role} value={role}>{role}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>Alt 2 Class</label>
-              <select
-                value={formData.alt2Class}
-                onChange={(e) => setFormData({ ...formData, alt2Class: e.target.value })}
-              >
-                <option value="">None</option>
-                {WOW_CLASSES.map(cls => (
-                  <option key={cls.name} value={cls.name}>{cls.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Alt 2 Role</label>
-              <select
-                value={formData.alt2SpecRole}
-                onChange={(e) => setFormData({ ...formData, alt2SpecRole: e.target.value })}
-              >
-                <option value="">Select role</option>
-                {roles.map(role => (
-                  <option key={role} value={role}>{role}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          {[...Array(ALT_SLOT_COUNT)].map((_, i) => {
+            const altClassKey = `alt${i+1}Class`;
+            const altRoleKey = `alt${i+1}Role`;
+            return (
+              <div className="form-row" key={i}>
+                <div className="form-group">
+                  <label>{`Alt ${i+1} Class`}</label>
+                  <select
+                    value={formData[altClassKey] || ''}
+                    onChange={e => setFormData({ ...formData, [altClassKey]: e.target.value })}
+                  >
+                    <option value="">None</option>
+                    {WOW_CLASSES.map(cls => (
+                      <option key={cls.name} value={cls.name}>{cls.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>{`Alt ${i+1} Role`}</label>
+                  <select
+                    value={formData[altRoleKey] || ''}
+                    onChange={e => setFormData({ ...formData, [altRoleKey]: e.target.value })}
+                  >
+                    <option value="">Select role</option>
+                    {WOW_ROLES.map(role => (
+                      <option key={role.key} value={role.key}>{role.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            );
+          })}
 
           <div className="form-group">
             <label>Status</label>

@@ -104,7 +104,6 @@ body {
 /* Roster Section */
 .roster-section {
   width: 100%;
-  /* min-width: 1300px; */
   background: #2a2a2a;
   border: 2px solid #444;
   border-radius: 8px;
@@ -117,7 +116,6 @@ body {
 .roster-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 8px;
 }
 
 .roster-header {
@@ -147,13 +145,9 @@ body {
 .roster-list {
   width: 100%;
   padding: 15px;
-  padding-bottom: 28px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-height: 0;
-  max-height: none;
-  position: relative;
 }
 
 .roster-list.drag-over {
@@ -201,12 +195,12 @@ body {
   position: relative;
   padding: 12px;
   display: grid;
-  grid-template-columns: 0px 60px 200px 120px 120px 120px 120px 300px auto 36px;
-  gap: 0px;
+  grid-template-columns: var(--player-card-columns, 0px);
+  gap: 2px;
   align-items: center;
   cursor: pointer;
   transition: all 0.3s;
-  min-width: 1250px;
+  min-width: max-content;
   width: 100%;
   justify-content: space-between;
 }
@@ -221,23 +215,20 @@ body {
   cursor: default;
 }
 
-.player-card.player-card-header > div {
-  display: flex;
-  align-items: center;
+.player-card.player-card-header {
+  cursor: default;
+  width: auto;
+  margin: 0 12px;
 }
-
-/* Hide edit/remove visuals in the header row but keep their layout space */
-.player-card.player-card-header .player-edit-icon,
-.player-card.player-card-header .player-remove-icon {
-  visibility: hidden;
-  width: 36px;
-  height: 36px;
+.player-card.player-card-header:hover {
+  background: #353535;
+  border: 2px solid #555;
+  transform: none;
 }
 
 .player-icon {
   font-size: 1.5em;
   text-align: center;
-  /* clip children so rounded corners apply to images */
   overflow: hidden;
   border-radius: 8px;
   display: inline-flex;
@@ -255,21 +246,43 @@ body {
   box-shadow: 0 1px 2px rgba(0,0,0,0.45);
 }
 
-.player-edit-icon {
+.player-actions-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  position: sticky;
+  right: 0;
+  top: 0;
+  height: 100%;
+  gap: 8px;
+  z-index: 2;
+}
+
+.player-edit-icon, .player-remove-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   background: transparent;
-  border: 1px solid #ffffff;
   border-radius: 6px;
+  margin-left: 6px;
   outline: none;
   box-shadow: 0 0 0 3px rgba(255,255,255,0.06);
   border-color: #ffffff;
-  padding: 2px;
-  margin-top: 20px;
   transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+  flex: none;
+}
+.player-card.player-card-header .player-edit-icon,
+.player-card.player-card-header .player-remove-icon {
+  visibility: hidden;
+  height: auto;
+}
+
+
+.player-edit-icon {
+  border: 1px solid #ffffff;
 }
 
 .player-edit-icon:hover {
@@ -279,17 +292,7 @@ body {
 }
 
 .player-remove-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: transparent;
   border: 1px solid rgba(255, 77, 79, 0.9);
-  border-radius: 6px;
-  padding: 2px;
-  margin-top: 20px;
-  transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
 }
 
 .player-remove-icon:hover {
@@ -298,18 +301,12 @@ body {
   transform: translateY(-1px);
 }
 
-.player-remove-icon:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(255,77,79,0.08);
-  border-color: rgba(255,77,79,1);
-}
-
 .player-name {
   font-weight: bold;
   font-size: 1.1em;
 }
 
-.player-class {
+.player-class, .player-spec {
   font-size: 0.9em;
 }
 
@@ -322,22 +319,11 @@ body {
   text-align: center;
 }
 
-/* Anchor inline buttons to the right-hand grid cells so they don't expand the layout */
-.player-card > button,
-.player-card .player-edit-icon,
-.player-card .player-remove-icon {
-  justify-self: end;
-  margin-left: 0;
-  width: 36px;
-  height: 36px;
-  box-sizing: border-box;
-}
-
-.player-name, .player-class, .player-spec {
+.player-name, .player-class, .player-spec, .player-alt {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  min-width: 0;
+  width: max-content;
 }
 
 .player-notes {
@@ -347,10 +333,6 @@ body {
   word-break: break-word;
   min-width: 0;
   max-width: 100%;
-}
-
-.player-edit-icon, .player-remove-icon {
-  flex: none;
 }
 
 .player-alt, .player-notes {

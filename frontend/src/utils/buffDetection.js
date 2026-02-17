@@ -2,7 +2,7 @@ export const getRoleCounts = (players) => {
   const counts = { tank: 0, healer: 0, melee: 0, ranged: 0 };
   
   players.forEach(player => {
-    const role = player.mainSpecRole.toLowerCase();
+    const role = player.mainRole.toLowerCase();
     if (role === 'tank') counts.tank++;
     else if (role === 'healer') counts.healer++;
     else if (role === 'melee dps') counts.melee++;

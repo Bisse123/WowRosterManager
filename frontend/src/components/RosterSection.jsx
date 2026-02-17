@@ -1,7 +1,7 @@
 import { useDroppable } from '@dnd-kit/core';
 import { useRef } from 'react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import PlayerCard from './PlayerCard';
+import PlayerCard, { ALT_SLOT_COUNT } from './PlayerCard';
 
 function RosterSection({ title, status, players, onEdit, onRemove }) {
   const { setNodeRef } = useDroppable({
@@ -36,11 +36,14 @@ function RosterSection({ title, status, players, onEdit, onRemove }) {
           <div className="player-name">Name</div>
           <div className="player-class">Class</div>
           <div className="player-spec">Role</div>
-          <div className="player-alt">Alt 1</div>
-          <div className="player-alt">Alt 2</div>
+          {[...Array(ALT_SLOT_COUNT)].map((_, i) => (
+            <div className="player-alt" key={i}>{`Alt ${i+1}`}</div>
+          ))}
           <div className="player-notes">Notes</div>
-          <div className="player-edit-icon" aria-hidden />
-          <div className="player-remove-icon" aria-hidden />
+          <div className="player-actions-vertical">
+            <div className="player-edit-icon" aria-hidden />
+            <div className="player-remove-icon" aria-hidden />
+          </div>
         </div>
 
         <div className={`roster-list`} ref={setRefs}>
