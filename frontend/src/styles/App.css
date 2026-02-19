@@ -10,15 +10,14 @@ body {
   color: #e0e0e0;
   overflow-x: hidden;
 }
-/* Session View */
-.session-view {
+
+.roster-view {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: #1a1a1a;
 }
 
-/* Toolbar */
 .toolbar {
   background: #2a2a2a;
   border-bottom: 2px solid #444;
@@ -27,23 +26,28 @@ body {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 15px;
   position: sticky;
   top: 0;
   z-index: 40;
 }
 
 .toolbar-left, .toolbar-center, .toolbar-right {
+  min-width: 33%;
   display: flex;
   align-items: center;
   gap: 15px;
 }
 
 .toolbar-left {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 18px;
+  justify-content: flex-start;
+}
+
+.toolbar-center {
+  justify-content: center;
+}
+
+.toolbar-right {
+  justify-content: flex-end;
 }
 
 .app-title {
@@ -54,6 +58,7 @@ body {
 
 .toolbar-btn {
   padding: 10px 20px;
+  margin: 5px;
   background: #3a3a3a;
   border: 2px solid #555;
   border-radius: 6px;
@@ -66,6 +71,7 @@ body {
 .toolbar-btn:hover {
   background: #4a4a4a;
   border-color: #777;
+  transform: translateY(-2px);
 }
 
 .toolbar-btn.primary {
@@ -74,36 +80,66 @@ body {
   color: #7fef4f;
 }
 
-/* Session Content */
+.toolbar-btn.primary:hover {
+  background: #3b661e;
+  border-color: #7fef4f;
+}
 
-.session-content {
+.toolbar-dropdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.toolbar-dropdown label {
+  width: 100%;
+  color: #fff;
+  font-weight: 500;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.toolbar-dropdown select {
+  width: 100%;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #222;
+  color: #fff;
+  border: 1px solid #555;
+}
+
+.roster-content,
+.splits-content {
   display: flex;
   flex-direction: row;
   flex: 1;
   overflow: hidden;
-  padding: 0 0 0 24px;
-  gap: 32px 0;
-  height: calc(100vh - 64px);
-  flex-wrap: nowrap;
 }
 
-.roster-container {
+.roster-container,
+.splits-container {
   height: calc(100vh - var(--toolbar-height, 64px));
   flex: 1 1 auto;
   display: flex;
-  flex-direction: column;
   gap: 20px;
-  padding: 20px 20px 20px 0;
-  
-  /* padding-right: 20px; */
+  padding: 20px;
   align-items: stretch;
   min-width: 0;
   overflow-y: scroll;
 }
 
-/* Roster Section */
-.roster-section {
+.roster-container {
+  flex-direction: column;
+}
+
+.splits-container {
+  flex-direction: row;
+}
+
+.roster-section,
+.splits-section {
   width: 100%;
+  height: 100%;
   background: #2a2a2a;
   border: 2px solid #444;
   border-radius: 8px;
@@ -112,13 +148,20 @@ body {
   margin-bottom: 0;
 }
 
-/* horizontal scroll wrapper that contains the column header row and the cards list */
 .roster-scroll {
+  width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-.roster-header {
+.splits-scroll {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.roster-header,
+.splits-header {
   padding: 15px 20px;
   background: #3a3a3a;
   border-bottom: 2px solid #555;
@@ -128,7 +171,8 @@ body {
   justify-content: space-between;
 }
 
-.roster-header h2 {
+.roster-header h2,
+.splits-header h2 {
   color: #ffd700;
   font-size: 1.2em;
 }
@@ -142,42 +186,25 @@ body {
   font-weight: bold;
 }
 
-.roster-list {
-  width: 100%;
+.roster-list,
+.splits-list {
   padding: 15px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
+.roster-list {
+  width: 100%;
+}
+
+.splits-list {
+  height: 100%;
+}
+
+
 .roster-list.drag-over {
   background: #3a3a3a;
-}
-
-.drop-preview {
-  height: 52px;
-  border: 2px dashed rgba(255, 215, 0, 0.6);
-  border-radius: 8px;
-  background: linear-gradient(90deg, rgba(255,215,0,0.06), rgba(255,215,0,0.02));
-  margin: 4px 0;
-}
-
-.drop-preview-abs {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  height: 52px;
-  border: 2px dashed rgba(255,215,0,0.6);
-  border-radius: 8px;
-  background: linear-gradient(90deg, rgba(255,215,0,0.06), rgba(255,215,0,0.02));
-  pointer-events: none;
-  transform: translateZ(0);
-}
-
-.end-drop-sentinel {
-  height: 28px;
-  width: 100%;
-  display: block;
 }
 
 .empty-roster {
@@ -187,15 +214,14 @@ body {
   font-style: italic;
 }
 
-/* Player Card */
-.player-card {
+.roster-player-card {
   background: #353535;
   border: 2px solid #555;
   border-radius: 6px;
   position: relative;
   padding: 12px;
   display: grid;
-  grid-template-columns: var(--player-card-columns, 0px);
+  grid-template-columns: var(--roster-player-card-columns, 0px);
   gap: 2px;
   align-items: center;
   cursor: pointer;
@@ -205,38 +231,99 @@ body {
   justify-content: space-between;
 }
 
-.player-card:hover {
+.roster-player-card:hover {
   background: #404040;
   border-color: #777;
   transform: translateY(-2px);
 }
 
-.player-card.readonly {
-  cursor: default;
-}
-
-.player-card.player-card-header {
+.roster-player-card.roster-player-card-header {
   cursor: default;
   width: auto;
   margin: 0 12px;
 }
-.player-card.player-card-header:hover {
+.roster-player-card.roster-player-card-header:hover {
   background: #353535;
   border: 2px solid #555;
   transform: none;
 }
 
-.player-icon {
-  font-size: 1.5em;
-  text-align: center;
-  overflow: hidden;
-  border-radius: 8px;
-  display: inline-flex;
+.splits-player-card {
+  background: #353535;
+  border: 2px solid #555;
+  border-radius: 6px;
+  position: relative;
+  padding: 12px;
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+  /* justify-content: space-between; */
+}
+
+.splits-coverage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #232323;
+  border-bottom: 2px solid #444;
+  align-items: center;
+}
+
+.splits-icons {
+  width: 100%;
+  display: flex;
+  gap: 8px;
   align-items: center;
   justify-content: center;
 }
 
-.player-icon-img {
+.splits-buff-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #353535;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2em;
+  color: #ffd700;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  border: 2px solid #555;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.splits-buff-icon.covered {
+  background: #2d5016;
+  color: #7fef4f;
+  border-color: #4a8025;
+}
+
+.splits-buff-icon.missing {
+  background: #3a3a3a;
+  color: #888;
+  border-color: #555;
+}
+
+.splits-coverage label {
+  font-size: 0.95em;
+  color: #ffd700;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.icons-horizontal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 10px;
+}
+
+.player-icon-img,
+.role-icon-img {
   width: 24px;
   height: 24px;
   object-fit: cover;
@@ -270,16 +357,14 @@ body {
   margin-left: 6px;
   outline: none;
   box-shadow: 0 0 0 3px rgba(255,255,255,0.06);
-  border-color: #ffffff;
   transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
   flex: none;
 }
-.player-card.player-card-header .player-edit-icon,
-.player-card.player-card-header .player-remove-icon {
+.roster-player-card.roster-player-card-header .player-edit-icon,
+.roster-player-card.roster-player-card-header .player-remove-icon {
   visibility: hidden;
   height: auto;
 }
-
 
 .player-edit-icon {
   border: 1px solid #ffffff;
@@ -307,7 +392,8 @@ body {
 }
 
 .player-class, .player-spec {
-  font-size: 0.9em;
+  font-weight: bold;
+  font-size: 1em;
 }
 
 .role-badge {
@@ -315,7 +401,6 @@ body {
   padding: 4px 10px;
   border-radius: 4px;
   font-size: 0.85em;
-  font-weight: bold;
   text-align: center;
 }
 
@@ -327,7 +412,6 @@ body {
 }
 
 .player-notes {
-  /* allow long notes to wrap instead of truncating */
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -336,12 +420,10 @@ body {
 }
 
 .player-alt, .player-notes {
-  font-size: 0.85em;
+  font-size: 0.9em;
   color: #aaa;
 }
 
-/* Sidebar */
-/* remove the fixed 64px usage and use the CSS var instead */
 .sidebar {
   position: sticky;
   top: 0px;
@@ -426,14 +508,6 @@ body {
   border-radius: 4px;
 }
 
-.role-icon-img {
-  font-size: 1.2em;
-  margin-left: 6px;
-  width: 18px;
-  height: 18px;
-}
-
-/* Group icon + name on the left side of the role row */
 .role-left {
   display: flex;
   align-items: center;
@@ -477,7 +551,6 @@ body {
   font-size: 1em;
 }
 
-/* Add Player Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -507,23 +580,28 @@ body {
   margin-bottom: 20px;
 }
 
+.form-row {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-bottom: 15px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  width: 100%;
 }
 
 .form-group label {
   color: #aaa;
-  font-size: 0.9em;
+  font-size: 1.1em;
   font-weight: bold;
+}
+
+.alt-form-group label {
+  font-size: 0.9em;
 }
 
 .form-group input,
@@ -533,6 +611,10 @@ body {
   border: 2px solid #444;
   border-radius: 6px;
   color: #e0e0e0;
+  font-size: 16px;
+}
+.alt-form-group input,
+.alt-form-group select {
   font-size: 14px;
 }
 
@@ -578,16 +660,16 @@ body {
 }
 
 
-/* Responsive layout: stack sidebar under roster on narrow screens */
-/* stack sidebar earlier to avoid the sidebar taking over layout */
 @media (max-width: 1500px) {
-  .session-content {
+  .roster-content,
+  .splits-content {
     flex-direction: column;
     padding: 12px;
     gap: 16px;
   }
 
-  .roster-container {
+  .roster-container,
+  .splits-container {
     order: 1;
     padding: 8px 0;
     flex-direction: column;
@@ -606,25 +688,14 @@ body {
     max-height: none;
   }
   
-  .roster-section {
+  .roster-section,
+  .splits-section {
     margin-bottom: 12px;
   }
 }
 
-/* Very small screens: further compact */
-@media (max-width: 460px) {
-  .player-card {
-    grid-template-columns: 30px 1fr 36px 36px;
-    gap: 6px;
-  }
-
-  .player-class, .player-spec {
-    display: none;
-  }
-}
-
 @media (max-width: 768px) {
-  .player-card {
+  .roster-player-card {
     grid-template-columns: 1fr;
     gap: 8px;
   }
@@ -639,20 +710,13 @@ body {
   }
 }
 
-.drop-preview {
-  height: 16px;
-  margin: 6px 12px;
-  border-radius: 6px;
-  background: rgba(255,255,255,0.06);
-  border: 1px dashed rgba(255,255,255,0.06);
-}
+@media (max-width: 460px) {
+  .roster-player-card {
+    grid-template-columns: 30px 1fr 36px 36px;
+    gap: 6px;
+  }
 
-.player-entry-wrapper {
-  position: relative;
-}
-
-.end-drop-sentinel {
-  height: 18px;
-  margin: 6px 12px;
-  border-radius: 6px;
+  .player-class, .player-spec {
+    display: none;
+  }
 }

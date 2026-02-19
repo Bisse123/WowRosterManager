@@ -1,12 +1,12 @@
 export const getRoleCounts = (players) => {
   const counts = { tank: 0, healer: 0, melee: 0, ranged: 0 };
-  
-  players.forEach(player => {
+
+  players.forEach((player) => {
     const role = player.mainRole.toLowerCase();
-    if (role === 'tank') counts.tank++;
-    else if (role === 'healer') counts.healer++;
-    else if (role === 'melee dps') counts.melee++;
-    else if (role === 'ranged dps') counts.ranged++;
+    if (role === "tank") counts.tank++;
+    else if (role === "healer") counts.healer++;
+    else if (role === "melee dps") counts.melee++;
+    else if (role === "ranged dps") counts.ranged++;
   });
 
   return counts;
@@ -14,8 +14,8 @@ export const getRoleCounts = (players) => {
 
 export const getClassCounts = (players) => {
   const counts = {};
-  
-  players.forEach(player => {
+
+  players.forEach((player) => {
     counts[player.class] = (counts[player.class] || 0) + 1;
   });
 
@@ -23,71 +23,71 @@ export const getClassCounts = (players) => {
 };
 
 export const detectRaidBuffs = (players) => {
-  const classes = players.map(p => p.class);
-  
+  const classes = players.map((p) => p.class);
+
   const hasClass = (className) => classes.includes(className);
   const hasAnyClass = (...classNames) => classNames.some(hasClass);
 
   return {
     standardBuffs: [
       {
-        name: 'Bloodlust',
-        covered: hasAnyClass('Shaman', 'Mage', 'Hunter', 'Evoker')
+        name: "Intellect",
+        covered: hasClass("Mage"),
       },
       {
-        name: 'Intellect',
-        covered: hasClass('Mage')
+        name: "Stamina",
+        covered: hasClass("Priest"),
       },
       {
-        name: 'Stamina',
-        covered: hasClass('Priest')
+        name: "Battle Shout",
+        covered: hasClass("Warrior"),
       },
       {
-        name: 'Battle Shout',
-        covered: hasClass('Warrior')
+        name: "Mark of the Wild",
+        covered: hasClass("Druid"),
       },
       {
-        name: 'Mark of the Wild',
-        covered: hasClass('Druid')
+        name: "Mystic Touch",
+        covered: hasClass("Monk"),
       },
       {
-        name: 'Mystic Touch',
-        covered: hasClass('Monk')
+        name: "Chaos Brand",
+        covered: hasClass("Demon Hunter"),
       },
       {
-        name: 'Chaos Brand',
-        covered: hasClass('Demon Hunter')
+        name: "Devotion Aura",
+        covered: hasClass("Paladin"),
       },
-      {
-        name: 'Devotion Aura',
-        covered: hasClass('Paladin')
-      }
     ],
     raidUtility: [
       {
-        name: 'Combat Resurrection',
-        covered: hasAnyClass('Druid', 'Warlock', 'Death Knight', 'Paladin')
+        name: "Bloodlust",
+        covered: hasAnyClass("Shaman", "Mage", "Hunter", "Evoker"),
       },
       {
-        name: 'Rallying Cry',
-        covered: hasClass('Warrior')
+        name: "Combat Resurrection",
+        covered: hasAnyClass("Druid", "Warlock", "Death Knight", "Paladin"),
       },
       {
-        name: 'Anti-Magic Zone',
-        covered: hasClass('Death Knight')
+        name: "Rallying Cry",
+        covered: hasClass("Warrior"),
       },
       {
-        name: 'Darkness',
-        covered: hasClass('Demon Hunter')
+        name: "Anti-Magic Zone",
+        covered: hasClass("Death Knight"),
       },
       {
-        name: 'Gateway',
-        covered: hasClass('Warlock')
+        name: "Darkness",
+        covered: hasClass("Demon Hunter"),
       },
       {
-        name: 'Innervate',
-        covered: hasClass('Druid')
-      }
-    ]
+        name: "Gateway",
+        covered: hasClass("Warlock"),
+      },
+      {
+        name: "Innervate",
+        covered: hasClass("Druid"),
+      },
+    ],
   };
 };

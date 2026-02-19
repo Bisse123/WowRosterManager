@@ -1,0 +1,112 @@
+import { useDroppable } from "@dnd-kit/core";
+import { useRef, useState } from "react";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import SplitsPlayerCard from "./SplitsPlayerCard";
+import { detectRaidBuffs } from "../../utils/buffDetection";
+
+function SplitsSection({ title, split, players }) {
+  const { setNodeRef } = useDroppable({
+    id: split,
+  });
+
+  const { setNodeRef: setEmptyRef } = useDroppable({
+    id: `${split}-empty`,
+  });
+  const rosterRef = useRef(null);
+  const setRefs = (node) => {
+    rosterRef.current = node;
+    setNodeRef(node);
+  };
+
+  const tanks = players.filter((p) => p.role === "tank");
+  const healers = players.filter((p) => p.role === "healer");
+  const melee = players.filter((p) => p.role === "melee");
+  const ranged = players.filter((p) => p.role === "ranged");
+
+  // Detect raid buffs for this split
+  const buffs = detectRaidBuffs(players);
+  // buffs.standardBuffs and buffs.raidUtility are arrays of { name, covered }
+  // Buff icon image path generator
+  const getBuffIcon = (name) => `/assets/buffs/${name.toLowerCase()}.jpg`;
+
+  // Helper to render buff icon or fallback
+  const renderBuffIcon = (name, covered) => {
+    const iconPath = getBuffIcon(name);
+    // Use a stateful component to handle fallback
+    const [imgError, setImgError] = useState(false);
+    if (imgError) {
+      return (
+        <div
+          key={name}
+          className={`splits-buff-icon ${covered ? "covered" : "missing"}`}
+          title={name}
+        >
+          ?
+        </div>
+      );
+    }
+    return (
+      <img
+        key={name}
+        className={`splits-buff-icon ${covered ? "covered" : "missing"}`}
+        src={iconPath}
+        alt={name}
+        style={{
+          filter: covered ? "none" : "grayscale(100%) brightness(100%)",
+        }}
+        onError={() => setImgError(true)}
+        title={name}
+      />
+    );
+  };
+
+  // Render all buff icons, separated by line
+  const standardBuffIcons = buffs.standardBuffs.map(({ name, covered }) =>
+    renderBuffIcon(name, covered),
+  );
+  const raidUtilityIcons = buffs.raidUtility.map(({ name, covered }) =>
+    renderBuffIcon(name, covered),
+  );
+
+  return (
+    <div className="splits-section">
+      <div
+        className="splits-coverage"
+        style={{ opacity: split === "Characters Unassigned" ? 0 : 1 }}
+      >
+        <div className="splits-icons">{standardBuffIcons}</div>
+        <div className="splits-icons">{raidUtilityIcons}</div>
+      </div>
+      <div className="splits-header">
+        <h2>{title}</h2>
+        <span className="count-badge">
+          {players.length} ({tanks.length} + {healers.length} + {melee.length} +{" "}
+          {ranged.length})
+        </span>
+      </div>
+
+      <div className="splits-scroll">
+        <div className="splits-list" ref={setRefs}>
+          <SortableContext
+            items={players.map((p) => p.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {players.map((player) => (
+              <SplitsPlayerCard key={player.id} player={player} />
+            ))}
+          </SortableContext>
+          {players.length === 0 && (
+            <div className="empty-roster" ref={setEmptyRef}>
+              Drag players here
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default SplitsSection;
