@@ -7,7 +7,7 @@ export function getInitialPlayerData(data = {}, altSlotCount = ALT_SLOT_COUNT) {
     mainName: data.mainName || data.name || "",
     mainClass: data.mainClass || data.class || "",
     mainRole: data.mainRole || "",
-    status: data.status || "Main",
+    status: data.status || "Trial",
     notes: data.notes || "",
   };
   for (let i = 1; i <= altSlotCount; i++) {
@@ -59,18 +59,34 @@ function AddPlayerModal({
   const overlayRef = useRef(null);
   const mouseDownOnOverlay = useRef(false);
   const nameInputRef = useRef(null);
+  const formRef = useRef(null);
 
   useEffect(() => {
-    // focus the name input when the modal mounts
     try {
       if (nameInputRef.current) {
         nameInputRef.current.focus();
-        // select existing text if editing
         nameInputRef.current.select && nameInputRef.current.select();
       }
-    } catch (err) {
-      // ignore focus errors in some environments
-    }
+    } catch (err) {}
+
+    const handleKeyDown = (e) => {
+      if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (formRef.current) {
+            // Use requestSubmit for native submit event
+            formRef.current.requestSubmit();
+          }
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          handleAttemptClose();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   const normalizeInitial = () =>
@@ -137,7 +153,7 @@ function AddPlayerModal({
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <h2>{initialData ? "Edit Player" : "Add New Player"}</h2>
 
-        <form onSubmit={handleSubmit}>
+        <form ref={formRef} onSubmit={handleSubmit}>
           {/* Main player info: name on its own row, class/role below, larger */}
 
           <div className="form-group">
@@ -204,7 +220,6 @@ function AddPlayerModal({
             </select>
           </div>
 
-          {/* Alts: name, class, role in a single row, smaller */}
           {[...Array(altSlotCount)].map((_, i) => {
             const altNameKey = `alt${i + 1}Name`;
             const altClassKey = `alt${i + 1}Class`;

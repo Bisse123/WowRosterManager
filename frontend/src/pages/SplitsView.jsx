@@ -1,20 +1,25 @@
-import { useState } from "react";
+import { useEffect,useState } from "react";
 import { DndContext, DragOverlay, rectIntersection } from "@dnd-kit/core";
 import Toolbar from "../components/Toolbar";
 import SplitsSection from "../components/Splits/SplitsSection";
 import SplitsPlayerCard from "../components/Splits/SplitsPlayerCard";
+import { WOW_CLASSES, WOW_ROLES } from "../utils/wowClasses";
+import { SPLIT_AMOUNT } from "../App";
 
-export const SPLIT_AMOUNT = 3;
 
-function SplitsView({
-  toolbarProps = {},
-  players,
-  setPlayers
-}) {
-  const [splitAmount, setSplitAmount] = useState(SPLIT_AMOUNT);
+function SplitsView({ toolbarProps = {}, autoSort, players, setPlayers, splitAmount = SPLIT_AMOUNT, setSplitAmount, setShowImportExportModal }) {
   const [activeId, setActiveId] = useState(null);
-  const [dragTarget, setDragTarget] = useState({ newSplit: null, oldSplit: null, index: null });
-  const [swapTarget, setSwapTarget] = useState({ id: null, newSplit: null, oldSplit: null, activeIndex: null });
+  const [dragTarget, setDragTarget] = useState({
+    newSplit: null,
+    oldSplit: null,
+    index: null,
+  });
+  const [swapTarget, setSwapTarget] = useState({
+    id: null,
+    newSplit: null,
+    oldSplit: null,
+    activeIndex: null,
+  });
   const [hoverRect, setHoverRect] = useState(null);
   const pointer = { current: { x: 0, y: 0 } };
 
@@ -23,6 +28,12 @@ function SplitsView({
     name: `Split ${i + 1}`,
   }));
 
+  useEffect(() => {
+    if (autoSort) {
+      handleSortPlayers();
+    }
+  }, [players, autoSort]);
+    
   const handleDragStart = (event) => {
     setActiveId(event.active.id);
     // Track pointer position globally while dragging so we can compute
@@ -46,8 +57,14 @@ function SplitsView({
     const draggedId = event.active.id;
     const found = players.find((p) => p.id === draggedId);
     if (found) {
-      const idx = players.filter((p) => p.split === found.split).findIndex((p) => p.id === draggedId);
-      setDragTarget({ newSplit: found.split, oldSplit: found.split, index: idx });
+      const idx = players
+        .filter((p) => p.split === found.split)
+        .findIndex((p) => p.id === draggedId);
+      setDragTarget({
+        newSplit: found.split,
+        oldSplit: found.split,
+        index: idx,
+      });
     }
   };
 
@@ -68,19 +85,34 @@ function SplitsView({
         setHoverRect({ id: over.id, top: r.top, height: r.height });
         const secPlayers = players.filter((p) => p.split === overPlayer.split);
         const idx = secPlayers.findIndex((p) => p.id === over.id);
-        setDragTarget((prev) => ({ ...prev, newSplit: overPlayer.split, index: idx }));
+        setDragTarget((prev) => ({
+          ...prev,
+          newSplit: overPlayer.split,
+          index: idx,
+        }));
       }
-    } else if (splits.some(s => s.id === over.id) || over.id.endsWith("-empty")) {
+    } else if (
+      splits.some((s) => s.id === over.id) ||
+      over.id.endsWith("-empty")
+    ) {
       toSection = over.id.replace("-empty", "");
       setHoverRect(null);
       // Place at end of the split
       const secPlayers = players.filter((p) => p.split === toSection);
-      setDragTarget((prev) => ({ ...prev, newSplit: toSection, index: secPlayers.length }));
+      setDragTarget((prev) => ({
+        ...prev,
+        newSplit: toSection,
+        index: secPlayers.length,
+      }));
     }
 
     if (activePlayer && toSection && activePlayer.split !== toSection) {
       let found = players.find(
-        (p) => p.split === toSection && p.name === activePlayer.name && p.id !== activePlayer.id && p.split !== 'Characters Unassigned'
+        (p) =>
+          p.split === toSection &&
+          p.name === activePlayer.name &&
+          p.id !== activePlayer.id &&
+          p.split !== "Unassigned",
       );
       if (swapTarget && swapTarget.id) {
         setPlayers((prev) => {
@@ -92,20 +124,23 @@ function SplitsView({
           });
         });
       }
-      if (found && swapTarget && found.id === swapTarget.id) {
+      if (!found || (found && swapTarget && found.id === swapTarget.id)) {
         setSwapTarget(null);
         found = null;
       }
       if (found) {
         // If swapTarget exists and is different, restore previous swapTarget to its original split
-        const secPlayers = players.filter((p) => p.split === activePlayer.split);
-        const activeIndex = secPlayers.findIndex((p) => p.id === activePlayer.id);
-        console.log(dragTarget, found, activePlayer, toSection, activeIndex);
+        const secPlayers = players.filter(
+          (p) => p.split === activePlayer.split,
+        );
+        const activeIndex = secPlayers.findIndex(
+          (p) => p.id === activePlayer.id,
+        );
         setSwapTarget({
           id: found.id,
           newSplit: dragTarget.oldSplit,
           oldSplit: found.split,
-          activeIndex: activeIndex
+          activeIndex: activeIndex,
         });
       }
       setPlayers((prev) => {
@@ -136,7 +171,11 @@ function SplitsView({
       const hoveredIndex = secPlayers.findIndex((p) => p.id === overId);
       let insertIndex = hoveredIndex;
       if (dMid > hMid) insertIndex += 1;
-      setDragTarget((prev) => ({ ...prev, newSplit: overPlayer.split, index: insertIndex }));
+      setDragTarget((prev) => ({
+        ...prev,
+        newSplit: overPlayer.split,
+        index: insertIndex,
+      }));
     } catch (e) {
       // ignore
     }
@@ -158,11 +197,15 @@ function SplitsView({
     } catch (e) {
       // ignore
     }
-    if (dragTarget && dragTarget.split && Number.isInteger(dragTarget.index)) {
+    if (
+      dragTarget &&
+      dragTarget.newSplit &&
+      Number.isInteger(dragTarget.index)
+    ) {
       setPlayers((prev) => {
         const activePlayer = prev.find((p) => p.id === activeId);
         if (!activePlayer) return prev;
-        const newSplit = dragTarget.split;
+        const newSplit = dragTarget.newSplit;
         // Use swapTarget state for swap logic
         if (swapTarget && swapTarget.id) {
           return prev.map((p) => {
@@ -196,25 +239,74 @@ function SplitsView({
     setHoverRect(null);
     setActiveId(null);
   };
+  
+  const handleSortPlayers = () => {
+    const splitOrder = splits.reduce((acc, s, index) => {
+      acc[s.id] = index; 
+      return acc;
+    }, {});
+    const classOrder = WOW_CLASSES.reduce((acc, cls, index) => {
+      acc[cls.name] = index;
+      return acc;
+    }, {});
+    const roleOrder = WOW_ROLES.reduce((acc, role, index) => {
+      acc[role.key] = index;
+      return acc;
+    }, {});
+    setPlayers((prev) => {
+      const sorted = [...prev].sort((a, b) => {
+        const sA = splitOrder[a.split] ?? 99;
+        const sB = splitOrder[b.split] ?? 99;
+        if (sA !== sB) return sA - sB;
+        const rA = roleOrder[a.role] ?? 99;
+        const rB = roleOrder[b.role] ?? 99;
+        if (rA !== rB) return rA - rB;
+        const mA = !a.id.includes("-alt");
+        const mB = !b.id.includes("-alt");
+        if (mA !== mB) return mA ? -1 : 1;
+        const cA = classOrder[a.class] ?? 99;
+        const cB = classOrder[b.class] ?? 99;
+        if (cA !== cB) return cA - cB;
+        return (a.mainName || "").localeCompare(b.mainName || "", undefined, {
+          sensitivity: "base",
+        });
+      });
+      
+      const same =
+        sorted.length === prev.length &&
+        sorted.every((p, i) => p.id === prev[i].id);
+      return same ? prev : sorted;
+    });
+  };
+
+  const handleResetSplits = () => {
+    setPlayers((prev) =>
+      prev.map((p) => ({ ...p, split: "Unassigned" })),
+    );
+  };
 
   return (
     <div className="splits-view">
       <Toolbar
+        onSort={handleSortPlayers}
+        onImport={() => setShowImportExportModal("Import")}
+        onExport={() => setShowImportExportModal("Export")}
         splitAmount={splitAmount}
         onSplitAmountChange={setSplitAmount}
+        onResetSplits={handleResetSplits}
         {...toolbarProps}
       />
       <div className="splits-content">
-        <div className="splits-container">
-          <DndContext
-            collisionDetection={(args) => {
-              return rectIntersection(args) || [];
-            }}
-            onDragMove={handleDragMove}
-            onDragOver={handleDragOver}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
+        <DndContext
+          collisionDetection={(args) => {
+            return rectIntersection(args) || [];
+          }}
+          onDragMove={handleDragMove}
+          onDragOver={handleDragOver}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="splits-container">
             {splits.map((split) => (
               <SplitsSection
                 key={split.id}
@@ -223,22 +315,25 @@ function SplitsView({
                 players={players.filter((p) => p.split === split.id)}
               />
             ))}
+          </div>
+          <div className="splits-unassigned">
+          <SplitsSection
+            title="Unassigned"
+            split="Unassigned"
+            players={players.filter(
+              (p) => !splits.some((s) => s.id === p.split),
+            )}
+          />
+          </div>
 
-            <SplitsSection
-              title="Unassigned"
-              split="Characters Unassigned"
-              players={players.filter((p) => !splits.some((s) => s.id === p.split))}
-            />
-
-            <DragOverlay>
-              {activeId ? (
-                <SplitsPlayerCard
-                  player={players.find((p) => p.id === activeId)}
-                />
-              ) : null}
-            </DragOverlay>
-          </DndContext>
-        </div>
+          <DragOverlay>
+            {activeId ? (
+              <SplitsPlayerCard
+                player={players.find((p) => p.id === activeId)}
+              />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </div>
     </div>
   );

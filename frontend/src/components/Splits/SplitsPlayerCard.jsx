@@ -65,6 +65,7 @@ function SplitsPlayerCard({
 
       <div className="player-name" style={{ color: classColor }}>
         {player.name}
+        {(player.id.match(/-alt\d+$/) ? (player.charName ? ` - ${player.charName}` : ` - Alt`) : null)}
       </div>
     </div>
   );

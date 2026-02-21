@@ -5,8 +5,8 @@ export const getRoleCounts = (players) => {
     const role = player.mainRole.toLowerCase();
     if (role === "tank") counts.tank++;
     else if (role === "healer") counts.healer++;
-    else if (role === "melee dps") counts.melee++;
-    else if (role === "ranged dps") counts.ranged++;
+    else if (role === "melee") counts.melee++;
+    else if (role === "ranged") counts.ranged++;
   });
 
   return counts;
@@ -16,14 +16,14 @@ export const getClassCounts = (players) => {
   const counts = {};
 
   players.forEach((player) => {
-    counts[player.class] = (counts[player.class] || 0) + 1;
+    counts[player.mainClass] = (counts[player.mainClass] || 0) + 1;
   });
 
   return counts;
 };
 
 export const detectRaidBuffs = (players) => {
-  const classes = players.map((p) => p.class);
+  const classes = players.map((p) => p.mainClass);
 
   const hasClass = (className) => classes.includes(className);
   const hasAnyClass = (...classNames) => classNames.some(hasClass);
@@ -57,6 +57,10 @@ export const detectRaidBuffs = (players) => {
       {
         name: "Devotion Aura",
         covered: hasClass("Paladin"),
+      },
+      {
+        name: "Hunter's Mark",
+        covered: hasClass("Hunter"),
       },
     ],
     raidUtility: [

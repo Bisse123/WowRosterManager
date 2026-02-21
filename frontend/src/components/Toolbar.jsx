@@ -5,12 +5,15 @@ function Toolbar({
   onImport,
   onExport,
   onSort,
+  autoSort,
+  toggleAutoSort,
   onToggleView,
   currentView,
   altSlotCount = 3,
   onAltSlotCountChange,
   splitAmount = 3,
   onSplitAmountChange,
+  onResetSplits,
 }) {
   return (
     <div className="toolbar">
@@ -23,17 +26,19 @@ function Toolbar({
         >
           {currentView === "roster" ? "🔀 View Splits" : "🔀 View Roster"}
         </button>
-      </div>
-
-      {currentView === "roster" && (
-        <div className="toolbar-center">
-          <button
-            onClick={onAddPlayer}
-            className="toolbar-btn primary"
-            title="Add Player"
-          >
-            ➕ Add New Player
-          </button>
+        <label>
+          <input
+            type="checkbox"
+            checked={autoSort}
+            onChange={(e) =>
+              typeof toggleAutoSort === "function" &&
+              toggleAutoSort(e.target.checked)
+            }
+            style={{ marginRight: 2 }}
+          />
+          Auto sort
+        </label>
+        {!autoSort && (
           <button
             onClick={onSort}
             className="toolbar-btn sort"
@@ -41,68 +46,72 @@ function Toolbar({
           >
             ⇅ Sort Players
           </button>
-          <div className="toolbar-dropdown">
-            <label>Max Alts</label>
-            <select
-              value={altSlotCount}
-              onChange={(e) =>
-                onAltSlotCountChange &&
-                onAltSlotCountChange(Number(e.target.value))
-              }
-            >
-              {[...Array(9)].map((_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {i + 1}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {currentView === "roster" && (
-        <div className="toolbar-right">
+      <div className="toolbar-center">
+
+        {currentView === "splits" && (
+          <button
+            onClick={onResetSplits
+              }
+            className="toolbar-btn reset"
+            title="Reset Splits"
+          >
+            🔄 Reset Splits
+          </button>
+        )}
+
+        {currentView === "roster" && (
           <div>
             <button
-              onClick={onImport}
-              className="toolbar-btn import"
-              title="Import Roster"
+              onClick={onAddPlayer}
+              className="toolbar-btn primary"
+              title="Add Player"
             >
-              Import Roster
-            </button>
-            <button
-              onClick={onExport}
-              className="toolbar-btn export"
-              title="Export Roster"
-            >
-              Export Roster
+              ➕ Add New Player
             </button>
           </div>
+        )}
+        <div className="toolbar-dropdown">
+          <label>{currentView === "roster" ? "Max Alts" : "Max Splits"}</label>
+          <select
+            value={currentView === "roster" ? altSlotCount : splitAmount}
+            onChange={(e) =>
+              currentView === "roster"
+                ? onAltSlotCountChange &&
+                  onAltSlotCountChange(Number(e.target.value))
+                : onSplitAmountChange &&
+                  onSplitAmountChange(Number(e.target.value))
+            }
+          >
+            {[...Array(9)].map((_, i) => (
+              <option key={i + 1} value={i + 1}>
+                {i + 1} {currentView === "roster" ? "Alts" : "Groups"}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
+      </div>
 
-      {currentView === "splits" && (
-        <div className="toolbar-center">
-          <div className="toolbar-dropdown">
-            <label>Number of splits</label>
-            <select
-              value={splitAmount}
-              onChange={(e) =>
-                onSplitAmountChange &&
-                onSplitAmountChange(Number(e.target.value))
-              }
-            >
-              {[...Array(9)].map((_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {i + 1} Groups
-                </option>
-              ))}
-            </select>
-          </div>
+      <div className="toolbar-right">
+        <div>
+          <button
+            onClick={onImport}
+            className="toolbar-btn import"
+            title="Import Roster"
+          >
+            Import Roster
+          </button>
+          <button
+            onClick={onExport}
+            className="toolbar-btn export"
+            title="Export Roster"
+          >
+            Export Roster
+          </button>
         </div>
-      )}
-
-      {currentView === "splits" && <div className="toolbar-right"></div>}
+      </div>
     </div>
   );
 }

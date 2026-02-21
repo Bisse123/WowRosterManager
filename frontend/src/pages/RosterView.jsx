@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { DndContext, DragOverlay, rectIntersection } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import RosterSection from "../components/Roster/RosterSection";
@@ -8,16 +8,18 @@ import Toolbar from "../components/Toolbar";
 import AddPlayerModal, {
   getInitialPlayerData,
 } from "../components/Roster/AddPlayerModal";
+import { WOW_CLASSES, WOW_ROLES } from "../utils/wowClasses";
 import { ALT_SLOT_COUNT } from "../App";
 
-
-function RosterView({ toolbarProps = {}, players, setPlayers , altSlotCount = ALT_SLOT_COUNT, setAltSlotCount}) {
-  const [showJsonModal, setShowJsonModal] = useState(false);
-  const [jsonString, setJsonString] = useState("");
-  const jsonTextAreaRef = useRef(null);
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [importString, setImportString] = useState("");
-  const importTextAreaRef = useRef(null);
+function RosterView({
+  toolbarProps = {},
+  autoSort,
+  players,
+  setPlayers,
+  altSlotCount = ALT_SLOT_COUNT,
+  setAltSlotCount,
+  setShowImportExportModal,
+}) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -31,11 +33,11 @@ function RosterView({ toolbarProps = {}, players, setPlayers , altSlotCount = AL
   const trialRoster = players.filter((p) => p.status === "Trial");
   const benchRoster = players.filter((p) => p.status === "Bench");
 
-  useEffect(() => {
-    setTimeout(() => {
-      updateRosterPlayerCardColumnWidths();
-    }, 0);
-  });
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     updateRosterPlayerCardColumnWidths();
+  //   }, 0);
+  // });
 
   useEffect(() => {
     const altCols = Array.from(
@@ -50,10 +52,10 @@ function RosterView({ toolbarProps = {}, players, setPlayers , altSlotCount = AL
   }, [altSlotCount]);
 
   useEffect(() => {
-    if (showImportModal && importTextAreaRef.current) {
-      importTextAreaRef.current.focus();
+    if (autoSort) {
+      handleSortPlayers();
     }
-  }, [showImportModal]);
+  }, [players, autoSort]);
 
   const handleDragStart = (event) => {
     setActiveId(event.active.id);
@@ -314,7 +316,15 @@ function RosterView({ toolbarProps = {}, players, setPlayers , altSlotCount = AL
   // Sorting function for players
   const handleSortPlayers = () => {
     const statusOrder = { Main: 0, Trial: 1, Bench: 2 };
-    const roleOrder = { tank: 0, healer: 1, melee: 2, ranged: 3 };
+    const classOrder = WOW_CLASSES.reduce((acc, cls, index) => {
+      acc[cls.name] = index;
+      return acc;
+    }, {});
+    const roleOrder = WOW_ROLES.reduce((acc, role, index) => {
+      acc[role.key] = index;
+      return acc;
+    }, {});
+
     setPlayers((prev) => {
       const sorted = [...prev].sort((a, b) => {
         const sA = statusOrder[a.status] ?? 99;
@@ -323,101 +333,20 @@ function RosterView({ toolbarProps = {}, players, setPlayers , altSlotCount = AL
         const rA = roleOrder[a.mainRole] ?? 99;
         const rB = roleOrder[b.mainRole] ?? 99;
         if (rA !== rB) return rA - rB;
+        const cA = classOrder[a.mainClass] ?? 99;
+        const cB = classOrder[b.mainClass] ?? 99;
+        if (cA !== cB) return cA - cB;
         return (a.mainName || "").localeCompare(b.mainName || "", undefined, {
           sensitivity: "base",
         });
       });
-      return sorted;
-    });
-  };
 
-  // Import players from TSV string
-  const importPlayersFromTsv = () => {
-    try {
-      const lines = importString.trim().split(/\r?\n/);
-      if (lines.length < 2) throw new Error("No data rows found");
-      const headers = lines[0].split("\t");
-      const importedPlayers = lines.slice(1).map((line) => {
-        const values = line.split("\t");
-        const playerData = {};
-        let maxAlt = 0;
-        headers.forEach((header, idx) => {
-          const altMatch = header.match(/^Alt(\d+) (Name|Class|Role)$/);
-          if (header === "Name") playerData.mainName = values[idx] || "";
-          else if (header === "Class") playerData.mainClass = values[idx] || "";
-          else if (header === "Role")
-            playerData.mainRole = values[idx] ? values[idx].toLowerCase() : "";
-          else if (header === "Status") playerData.status = values[idx] || "";
-          else if (header === "Note") playerData.notes = values[idx] || "";
-          else if (altMatch) {
-            const altIdx = altMatch[1];
-            const altType = altMatch[2];
-            const idx = parseInt(altIdx, 10);
-            if (idx > maxAlt) maxAlt = idx;
-            if (altType === "Name")
-              playerData[`alt${altIdx}Name`] = values[idx] || "";
-            else if (altType === "Class")
-              playerData[`alt${altIdx}Class`] = values[idx] || "";
-            else if (altType === "Role")
-              playerData[`alt${altIdx}Role`] = values[idx] ? values[idx].toLowerCase() : "";
-          }
-        });
-        if (maxAlt > 0 && typeof setAltSlotCount === 'function') {
-          setAltSlotCount(maxAlt);
-        }
-        return {
-          id: `player-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          ...getInitialPlayerData(playerData, maxAlt > 0 ? maxAlt : altSlotCount),
-        };
-      });
-      setPlayers(importedPlayers);
-      setShowImportModal(false);
-      setImportString("");
-    } catch (err) {
-      alert("Failed to import: " + (err.message || err));
-    }
-  };
-
-  // Export players to TSV with specified headers
-  const exportPlayersToTsv = () => {
-    const headers = [
-      "Name",
-      "Class",
-      "Role",
-      "Status",
-      "Note",
-      ...Array.from({ length: altSlotCount }, (_, i) => [
-        `Alt${i + 1} Name`,
-        `Alt${i + 1} Class`,
-        `Alt${i + 1} Role`,
-      ]).flat(),
-    ];
-    const rows = players.map((p) => {
-      const mainRole = p.mainRole
-        ? p.mainRole.charAt(0).toUpperCase() + p.mainRole.slice(1)
-        : "";
-      const row = [
-        p.mainName || "",
-        p.mainClass || "",
-        mainRole || "",
-        p.status || "",
-        p.notes || "",
-      ];
-      for (let i = 1; i <= altSlotCount; i++) {
-        const altRole = p[`alt${i}Role`]
-          ? p[`alt${i}Role`].charAt(0).toUpperCase() + p[`alt${i}Role`].slice(1)
-          : "";
-        row.push(
-          p[`alt${i}Name`] || "",
-          p[`alt${i}Class`] || "",
-          altRole || "",
-        );
-      }
-      return row.map((v) => String(v).replace(/\t/g, " ")).join("\t");
+      // Only update state if order actually changed (by id), avoid infinite loops
+      const same =
+        sorted.length === prev.length &&
+        sorted.every((p, i) => p.id === prev[i].id);
+      return same ? prev : sorted;
     });
-    const tsv = [headers.join("\t"), ...rows].join("\n");
-    setJsonString(tsv);
-    setShowJsonModal(true);
   };
 
   return (
@@ -425,149 +354,12 @@ function RosterView({ toolbarProps = {}, players, setPlayers , altSlotCount = AL
       <Toolbar
         onAddPlayer={() => setShowAddModal(true)}
         onSort={handleSortPlayers}
-        onExport={exportPlayersToTsv}
-        onImport={() => setShowImportModal(true)}
+        onImport={() => setShowImportExportModal("Import")}
+        onExport={() => setShowImportExportModal("Export")}
         altSlotCount={altSlotCount}
         onAltSlotCountChange={setAltSlotCount}
         {...toolbarProps}
       />
-
-      {/* Import Modal */}
-      {showImportModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.7)",
-            zIndex: 10000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            style={{
-              background: "#222",
-              padding: 32,
-              borderRadius: 12,
-              maxWidth: 700,
-              width: "90%",
-            }}
-          >
-            <h2 style={{ color: "#ffd700", marginBottom: 16 }}>Import TSV</h2>
-            <textarea
-              ref={importTextAreaRef}
-              value={importString}
-              onChange={(e) => setImportString(e.target.value)}
-              style={{
-                width: "100%",
-                height: 300,
-                fontSize: 14,
-                fontFamily: "monospace",
-                marginBottom: 16,
-                color: "#fff",
-                background: "#111",
-                border: "1px solid #555",
-                borderRadius: 6,
-                padding: 10,
-              }}
-              placeholder="Paste exported TSV here..."
-            />
-            <div
-              style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}
-            >
-              <button
-                className="btn-primary"
-                style={{ padding: "10px 22px", fontWeight: 600, fontSize: 15 }}
-                onClick={importPlayersFromTsv}
-              >
-                Import
-              </button>
-              <button
-                className="btn-secondary"
-                style={{ padding: "10px 22px", fontWeight: 600, fontSize: 15 }}
-                onClick={() => setShowImportModal(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TSV Modal */}
-      {showJsonModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.7)",
-            zIndex: 10000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            style={{
-              background: "#222",
-              padding: 32,
-              borderRadius: 12,
-              maxWidth: 700,
-              width: "90%",
-            }}
-          >
-            <h2 style={{ color: "#ffd700", marginBottom: 16 }}>Exported TSV</h2>
-            <textarea
-              ref={jsonTextAreaRef}
-              value={jsonString}
-              readOnly
-              style={{
-                width: "100%",
-                height: 300,
-                fontSize: 14,
-                fontFamily: "monospace",
-                marginBottom: 16,
-                color: "#fff",
-                background: "#111",
-                border: "1px solid #555",
-                borderRadius: 6,
-                padding: 10,
-              }}
-              onFocus={(e) => e.target.select()}
-            />
-            <div
-              style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}
-            >
-              <button
-                className="btn-primary"
-                style={{ padding: "10px 22px", fontWeight: 600, fontSize: 15 }}
-                onClick={() => {
-                  if (jsonTextAreaRef.current) {
-                    jsonTextAreaRef.current.select();
-                    document.execCommand("copy");
-                  }
-                }}
-              >
-                Copy TSV
-              </button>
-              <button
-                className="btn-secondary"
-                style={{ padding: "10px 22px", fontWeight: 600, fontSize: 15 }}
-                onClick={() => setShowJsonModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="roster-content">
         <div className="roster-container">
@@ -644,6 +436,7 @@ function RosterView({ toolbarProps = {}, players, setPlayers , altSlotCount = AL
           existingNames={players
             .filter((p) => p.id !== editingPlayer.id)
             .map((p) => p.mainName)}
+          altSlotCount={altSlotCount}
         />
       )}
     </div>

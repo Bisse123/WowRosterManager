@@ -6,6 +6,7 @@ import {
 } from "@dnd-kit/sortable";
 import SplitsPlayerCard from "./SplitsPlayerCard";
 import { detectRaidBuffs } from "../../utils/buffDetection";
+import { TOKEN_TYPES, getTokenCounts } from "../../utils/tokenDetection";
 
 function SplitsSection({ title, split, players }) {
   const { setNodeRef } = useDroppable({
@@ -20,7 +21,7 @@ function SplitsSection({ title, split, players }) {
     rosterRef.current = node;
     setNodeRef(node);
   };
-
+  const mainsAndTrials = players.filter((p) => !p.id.includes("-alt") && p.status !== "Bench");
   const tanks = players.filter((p) => p.role === "tank");
   const healers = players.filter((p) => p.role === "healer");
   const melee = players.filter((p) => p.role === "melee");
@@ -73,13 +74,31 @@ function SplitsSection({ title, split, players }) {
 
   return (
     <div className="splits-section">
-      <div
-        className="splits-coverage"
-        style={{ opacity: split === "Characters Unassigned" ? 0 : 1 }}
-      >
-        <div className="splits-icons">{standardBuffIcons}</div>
-        <div className="splits-icons">{raidUtilityIcons}</div>
+      {split !== "Unassigned" && (
+      <div>
+        <div className="splits-tokens">
+          {Object.keys(TOKEN_TYPES).map((tokenKey) => {
+            const count = getTokenCounts(tokenKey, mainsAndTrials) || 0;
+            const color =
+              count > 0
+                ? { color: "rgba(0, 255, 0, 1)" }
+                : { color: "rgba(255,0,0,1)" };
+            return (
+              <div key={tokenKey}>
+                <label style={color}>{tokenKey}</label>
+                <span className="count">{count}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="splits-coverage">
+          <div className="splits-icons">{standardBuffIcons}</div>
+          <div className="splits-icons">{raidUtilityIcons}</div>
+        </div>
       </div>
+      )}
+
       <div className="splits-header">
         <h2>{title}</h2>
         <span className="count-badge">
