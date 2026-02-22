@@ -123,7 +123,7 @@ function RosterPlayerCard({
 
       <div className="player-notes">{player.notes}</div>
 
-      <div className="player-actions-vertical">
+      <div className="player-actions-horizontal">
         <button
           type="button"
           className="player-edit-icon"

@@ -46,9 +46,10 @@ function ImportExportModals({
     };
   }, [showModal]);
 
-  const importPlayers = (inputString = string) => {
+  const importPlayers = () => {
     let rosterString = "";
     let splitsString = "";
+    const inputString = textAreaRef.current ? textAreaRef.current.value : string;
     const lines = inputString.split(/\r?\n/);
     let rosterStart = -1;
     let splitsStart = -1;

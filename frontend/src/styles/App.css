@@ -11,7 +11,8 @@ body {
   overflow-x: hidden;
 }
 
-.roster-view {
+.roster-view,
+.splits-view {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -124,7 +125,6 @@ body {
   display: flex;
   gap: 20px;
   padding: 20px;
-  /* margin: 0 10px; */
   align-items: stretch;
   overflow-y: auto;
 }
@@ -153,14 +153,22 @@ body {
   margin-bottom: 0;
 }
 
+.roster-section {
+  height: max-content;
+}
+
+.splits-section {
+  width: max-content;
+}
+
 .roster-scroll {
   width: 100%;
-  min-height: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
 .splits-scroll {
+  /* margin-bottom: 20px; */
   min-width: 100%;
   height: 100%;
   overflow-y: auto;
@@ -261,7 +269,7 @@ body {
   border: 2px solid #555;
   border-radius: 6px;
   position: relative;
-  padding: 12px;
+  padding: 8px;
   display: flex;
   gap: 2px;
   align-items: center;
@@ -359,17 +367,17 @@ body {
   box-shadow: 0 1px 2px rgba(0,0,0,0.45);
 }
 
-.player-actions-vertical {
+.player-actions-horizontal {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-end;
-  justify-content: center;
+  justify-content: end;
   position: sticky;
   right: 0;
   top: 0;
   height: 100%;
   gap: 8px;
-  z-index: 2;
+  z-index: 3;
 }
 
 .player-edit-icon, .player-remove-icon {
@@ -442,7 +450,7 @@ body {
   overflow-wrap: anywhere;
   word-break: break-word;
   min-width: 0;
-  max-width: 100%;
+  max-width: 90%;
 }
 
 .player-alt, .player-notes {

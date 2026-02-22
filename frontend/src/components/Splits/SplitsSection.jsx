@@ -5,7 +5,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import SplitsPlayerCard from "./SplitsPlayerCard";
-import { detectRaidBuffs } from "../../utils/buffDetection";
+import { detectRaidBuffs, getBuffIconPath } from "../../utils/buffDetection";
 import { TOKEN_TYPES, getTokenCounts } from "../../utils/tokenDetection";
 
 function SplitsSection({ title, split, players }) {
@@ -27,16 +27,9 @@ function SplitsSection({ title, split, players }) {
   const melee = players.filter((p) => p.role === "melee");
   const ranged = players.filter((p) => p.role === "ranged");
 
-  // Detect raid buffs for this split
   const buffs = detectRaidBuffs(players);
-  // buffs.standardBuffs and buffs.raidUtility are arrays of { name, covered }
-  // Buff icon image path generator
-  const getBuffIcon = (name) => `/assets/buffs/${name.toLowerCase()}.jpg`;
-
-  // Helper to render buff icon or fallback
   const renderBuffIcon = (name, covered) => {
-    const iconPath = getBuffIcon(name);
-    // Use a stateful component to handle fallback
+    const iconPath = getBuffIconPath(name);
     const [imgError, setImgError] = useState(false);
     if (imgError) {
       return (
