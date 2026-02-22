@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { getInitialPlayerData } from "../components/Roster/AddPlayerModal";
+import { getInitialPlayerData } from "./AddPlayerModal";
 
 function ImportExportModals({
   showModal, // false | 'Import' | 'Export'

@@ -3,11 +3,11 @@ import { DndContext, DragOverlay, rectIntersection } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import RosterSection from "../components/Roster/RosterSection";
 import RosterPlayerCard from "../components/Roster/RosterPlayerCard";
-import Sidebar from "../components/Roster/Sidebar";
+import Sidebar from "../components/Roster/RosterSidebar";
 import Toolbar from "../components/Toolbar";
 import AddPlayerModal, {
   getInitialPlayerData,
-} from "../components/Roster/AddPlayerModal";
+} from "../components/Modals/AddPlayerModal";
 import { WOW_CLASSES, WOW_ROLES } from "../utils/wowClasses";
 import { ALT_SLOT_COUNT } from "../App";
 

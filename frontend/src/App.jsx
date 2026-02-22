@@ -2,12 +2,12 @@ import { useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import RosterView from "./pages/RosterView";
 import SplitsView from "./pages/SplitsView";
-import ImportExportModals from "./pages/ImportExportModals";
+import ImportExportModals from "./components/Modals/ImportExportModals";
 import { useState } from "react";
 import { saveToLocalStorage, loadFromLocalStorage } from "./utils/storage";
 
 export const ALT_SLOT_COUNT = 3;
-export const SPLIT_AMOUNT = 3;
+export const SPLIT_AMOUNT = 4;
 
 function App() {
   const [currentView, setCurrentView] = useState("roster");
