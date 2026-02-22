@@ -48,7 +48,6 @@ function App() {
 
   useEffect(() => {
     saveToLocalStorage("wrm_splits", SplitsPlayers);
-    // console.log("Saved splits to storage:", SplitsPlayers);
   }, [SplitsPlayers]);
 
   useEffect(() => {

@@ -25,12 +25,11 @@ export const getClassCounts = (players) => {
 export const getBuffIconPath = (buffName) => {
   if (!buffName) return "";
   const slug = buffName.toLowerCase();
-  return `/assets/buffs/${slug}.jpg`;
+  return `${import.meta.env.BASE_URL}assets/buffs/${slug}.jpg`;
 }
 
 export const detectRaidBuffs = (players) => {
-  const classes = players.map((p) => p.class);
-  console.log("Detecting buffs for classes:", players);
+  const classes = players.map((p) => p.class || p.mainClass);
 
   const hasClass = (className) => classes.includes(className);
   const hasAnyClass = (...classNames) => classNames.some(hasClass);

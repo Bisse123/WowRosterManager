@@ -22,7 +22,7 @@ export const getClassColor = (className) => {
 export const getClassIconPath = (className) => {
   if (!className) return "";
   const slug = className.toLowerCase();
-  return `/assets/classes/${slug}.jpg`;
+  return `${import.meta.env.BASE_URL}assets/classes/${slug}.jpg`;
 };
 
 export const WOW_ROLES = [
@@ -34,5 +34,5 @@ export const WOW_ROLES = [
 
 export const getRoleIconPath = (roleKey) => {
   if (!roleKey) return "";
-  return `/assets/roles/${roleKey.toLowerCase()}.png`;
+  return `${import.meta.env.BASE_URL}assets/roles/${roleKey.toLowerCase()}.png`;
 };
