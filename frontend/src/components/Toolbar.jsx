@@ -7,6 +7,9 @@ function Toolbar({
   onSort,
   autoSort,
   toggleAutoSort,
+  onClearAllPriorities,
+  onAddPriorityItem,
+  onRemovePriorityItem,
   onToggleView,
   currentView,
   altSlotCount = 3,
@@ -19,26 +22,51 @@ function Toolbar({
     <div className="toolbar">
       <div className="toolbar-left">
         <h1 className="app-title">🎮 HKM War Room</h1>
-        <button
-          onClick={onToggleView}
-          className="toolbar-btn"
-          title="Swap View"
-        >
-          {currentView === "roster" ? "🔀 View Splits" : "🔀 View Roster"}
-        </button>
-        <label>
-          <input
-            type="checkbox"
-            checked={autoSort}
-            onChange={(e) =>
-              typeof toggleAutoSort === "function" &&
-              toggleAutoSort(e.target.checked)
-            }
-            style={{ marginRight: 2 }}
-          />
-          Auto sort
-        </label>
-        {!autoSort && (
+        {currentView !== "roster" && (
+          <button
+            onClick={() => onToggleView("roster")}
+            className="toolbar-btn"
+            title="Swap View"
+          >
+            🔀 View Roster
+          </button>
+        )}
+        {currentView !== "splits" && (
+          <button
+            onClick={() => onToggleView("splits")}
+            className="toolbar-btn"
+            title="Swap View"
+          >
+            🔀 View splits
+          </button>
+        )}
+        {currentView !== "priorities" && (
+          <button
+            onClick={() => onToggleView("priorities")}
+            className="toolbar-btn"
+            title="Swap View"
+          >
+            🔀 View priorities
+          </button>
+        )}
+      </div>
+
+      <div className="toolbar-center">
+        {currentView !== "priorities" && (
+          <label>
+            <input
+              type="checkbox"
+              checked={autoSort}
+              onChange={(e) =>
+                typeof toggleAutoSort === "function" &&
+                toggleAutoSort(e.target.checked)
+              }
+              style={{ marginRight: 2 }}
+            />
+            Auto sort
+          </label>
+        )}
+        {!autoSort && currentView !== "priorities" && (
           <button
             onClick={onSort}
             className="toolbar-btn sort"
@@ -47,14 +75,10 @@ function Toolbar({
             ⇅ Sort Players
           </button>
         )}
-      </div>
-
-      <div className="toolbar-center">
 
         {currentView === "splits" && (
           <button
-            onClick={onResetSplits
-              }
+            onClick={onResetSplits}
             className="toolbar-btn reset"
             title="Reset Splits"
           >
@@ -66,32 +90,63 @@ function Toolbar({
           <div>
             <button
               onClick={onAddPlayer}
-              className="toolbar-btn primary"
+              className="toolbar-btn add"
               title="Add Player"
             >
               ➕ Add New Player
             </button>
           </div>
         )}
-        <div className="toolbar-dropdown">
-          <label>{currentView === "roster" ? "Max Alts" : "Max Splits"}</label>
-          <select
-            value={currentView === "roster" ? altSlotCount : splitAmount}
-            onChange={(e) =>
-              currentView === "roster"
-                ? onAltSlotCountChange &&
-                  onAltSlotCountChange(Number(e.target.value))
-                : onSplitAmountChange &&
-                  onSplitAmountChange(Number(e.target.value))
-            }
+        {currentView !== "priorities" && (
+          <div className="toolbar-dropdown">
+            <label>
+              {currentView === "roster" ? "Max Alts" : "Max Splits"}
+            </label>
+            <select
+              value={currentView === "roster" ? altSlotCount : splitAmount}
+              onChange={(e) =>
+                currentView === "roster"
+                  ? onAltSlotCountChange &&
+                    onAltSlotCountChange(Number(e.target.value))
+                  : onSplitAmountChange &&
+                    onSplitAmountChange(Number(e.target.value))
+              }
+            >
+              {[...Array(9)].map((_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {i + 1} {currentView === "roster" ? "Alts" : "Groups"}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {currentView === "priorities" && (
+          <button
+            onClick={onAddPriorityItem}
+            className="toolbar-btn add"
+            title="Add Priority Item"
           >
-            {[...Array(9)].map((_, i) => (
-              <option key={i + 1} value={i + 1}>
-                {i + 1} {currentView === "roster" ? "Alts" : "Groups"}
-              </option>
-            ))}
-          </select>
-        </div>
+            ➕ Add Priority Item
+          </button>
+        )}
+        {currentView === "priorities" && (
+          <button
+            onClick={onRemovePriorityItem}
+            className="toolbar-btn remove"
+            title="Remove Priority Item"
+          >
+            ➖ Remove Priority Item
+          </button>
+        )}
+        {currentView === "priorities" && (
+          <button
+            onClick={onClearAllPriorities}
+            className="toolbar-btn clear"
+            title="Clear All Priorities"
+          >
+            🗑️ Clear All Priorities
+          </button>
+        )}
       </div>
 
       <div className="toolbar-right">

@@ -19,6 +19,7 @@ export function getInitialPlayerData(data = {}, altSlotCount = ALT_SLOT_COUNT) {
 }
 
 function AddPlayerModal({
+  show,
   onClose,
   onAdd,
   initialData = null,
@@ -62,19 +63,14 @@ function AddPlayerModal({
   const formRef = useRef(null);
 
   useEffect(() => {
-    try {
-      if (nameInputRef.current) {
-        nameInputRef.current.focus();
-        nameInputRef.current.select && nameInputRef.current.select();
-      }
-    } catch (err) {}
+    if (!show) return;
+    setTimeout(() => nameInputRef.current && nameInputRef.current.focus(), 0);
 
     const handleKeyDown = (e) => {
       if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
         if (e.key === "Enter") {
           e.preventDefault();
           if (formRef.current) {
-            // Use requestSubmit for native submit event
             formRef.current.requestSubmit();
           }
         } else if (e.key === "Escape") {
@@ -87,7 +83,7 @@ function AddPlayerModal({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [show]);
 
   const normalizeInitial = () =>
     getInitialPlayerData(initialData || {}, altSlotCount);
@@ -289,10 +285,10 @@ function AddPlayerModal({
           </div>
 
           <div className="modal-actions">
-            <button type="button" onClick={onClose} className="btn-secondary">
+            <button type="button" onClick={onClose} className="btn-cancel">
               Cancel
             </button>
-            <button type="submit" className="btn-primary">
+            <button type="submit" className="btn-add">
               {initialData ? "Save Changes" : "Add Player"}
             </button>
           </div>

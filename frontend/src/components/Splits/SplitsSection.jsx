@@ -7,8 +7,9 @@ import {
 import SplitsPlayerCard from "./SplitsPlayerCard";
 import { detectRaidBuffs, getBuffIconPath } from "../../utils/buffDetection";
 import { TOKEN_TYPES, getTokenCounts } from "../../utils/tokenDetection";
+import titleCase from "../../utils/general";
 
-function SplitsSection({ title, split, players }) {
+function SplitsSection({ title, split, players, priorityPlayers }) {
   const { setNodeRef } = useDroppable({
     id: split,
   });
@@ -21,7 +22,10 @@ function SplitsSection({ title, split, players }) {
     rosterRef.current = node;
     setNodeRef(node);
   };
-  const mainsAndTrials = players.filter((p) => !p.id.includes("-alt") && p.status !== "Bench");
+
+  const mainsAndTrials = players.filter(
+    (p) => !p.id.includes("-alt") && p.status !== "Bench",
+  );
   const tanks = players.filter((p) => p.role === "tank");
   const healers = players.filter((p) => p.role === "healer");
   const melee = players.filter((p) => p.role === "melee");
@@ -68,28 +72,28 @@ function SplitsSection({ title, split, players }) {
   return (
     <div className="splits-section">
       {split !== "Unassigned" && (
-      <div>
-        <div className="splits-tokens">
-          {Object.keys(TOKEN_TYPES).map((tokenKey) => {
-            const count = getTokenCounts(tokenKey, mainsAndTrials) || 0;
-            const color =
-              count > 0
-                ? { color: "rgba(0, 255, 0, 1)" }
-                : { color: "rgba(255,0,0,1)" };
-            return (
-              <div key={tokenKey}>
-                <label style={color}>{tokenKey}</label>
-                <span className="count">{count}</span>
-              </div>
-            );
-          })}
-        </div>
+        <div>
+          <div className="splits-tokens">
+            {Object.keys(TOKEN_TYPES).map((tokenKey) => {
+              const count = getTokenCounts(tokenKey, mainsAndTrials) || 0;
+              const color =
+                count > 0
+                  ? { color: "rgba(0, 255, 0, 1)" }
+                  : { color: "rgba(255,0,0,1)" };
+              return (
+                <div key={tokenKey}>
+                  <label style={color}>{titleCase(tokenKey)}</label>
+                  <span className="count">{count}</span>
+                </div>
+              );
+            })}
+          </div>
 
-        <div className="splits-coverage">
-          <div className="splits-icons">{standardBuffIcons}</div>
-          <div className="splits-icons">{raidUtilityIcons}</div>
+          <div className="splits-coverage">
+            <div className="splits-icons">{standardBuffIcons}</div>
+            <div className="splits-icons">{raidUtilityIcons}</div>
+          </div>
         </div>
-      </div>
       )}
 
       <div className="splits-header">
@@ -107,7 +111,11 @@ function SplitsSection({ title, split, players }) {
             strategy={verticalListSortingStrategy}
           >
             {players.map((player) => (
-              <SplitsPlayerCard key={player.id} player={player} />
+              <SplitsPlayerCard
+                key={player.id}
+                player={player}
+                priorityItems={priorityPlayers[player.id] || []}
+              />
             ))}
           </SortableContext>
           {players.length === 0 && (

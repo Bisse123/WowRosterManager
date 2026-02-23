@@ -1,4 +1,4 @@
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 import { DndContext, DragOverlay, rectIntersection } from "@dnd-kit/core";
 import Toolbar from "../components/Toolbar";
 import SplitsSection from "../components/Splits/SplitsSection";
@@ -6,8 +6,15 @@ import SplitsPlayerCard from "../components/Splits/SplitsPlayerCard";
 import { WOW_CLASSES, WOW_ROLES } from "../utils/wowClasses";
 import { SPLIT_AMOUNT } from "../App";
 
-
-function SplitsView({ toolbarProps = {}, autoSort, players, setPlayers, splitAmount = SPLIT_AMOUNT, setSplitAmount, setShowImportExportModal }) {
+function SplitsView({
+  toolbarProps = {},
+  autoSort,
+  players,
+  setPlayers,
+  splitAmount = SPLIT_AMOUNT,
+  setSplitAmount,
+  priorities,
+}) {
   const [activeId, setActiveId] = useState(null);
   const [dragTarget, setDragTarget] = useState({
     newSplit: null,
@@ -33,7 +40,20 @@ function SplitsView({ toolbarProps = {}, autoSort, players, setPlayers, splitAmo
       handleSortPlayers();
     }
   }, [players, autoSort]);
-    
+
+  // Build a map of playerId -> list of priority item names (unique)
+  const priorityPlayers = {};
+  if (priorities) {
+    Object.keys(priorities).forEach((itemName) => {
+      const pr = priorities[itemName] || {};
+      (pr.players || []).forEach((pid) => {
+        const mainId = String(pid).endsWith("-main") ? pid : `${pid}-main`;
+        priorityPlayers[mainId] = priorityPlayers[mainId] || [];
+        if (!priorityPlayers[mainId].includes(itemName)) priorityPlayers[mainId].push(itemName);
+      });
+    });
+  }
+
   const handleDragStart = (event) => {
     setActiveId(event.active.id);
     // Track pointer position globally while dragging so we can compute
@@ -239,10 +259,10 @@ function SplitsView({ toolbarProps = {}, autoSort, players, setPlayers, splitAmo
     setHoverRect(null);
     setActiveId(null);
   };
-  
+
   const handleSortPlayers = () => {
     const splitOrder = splits.reduce((acc, s, index) => {
-      acc[s.id] = index; 
+      acc[s.id] = index;
       return acc;
     }, {});
     const classOrder = WOW_CLASSES.reduce((acc, cls, index) => {
@@ -258,12 +278,15 @@ function SplitsView({ toolbarProps = {}, autoSort, players, setPlayers, splitAmo
         const sA = splitOrder[a.split] ?? 99;
         const sB = splitOrder[b.split] ?? 99;
         if (sA !== sB) return sA - sB;
-        const rA = roleOrder[a.role] ?? 99;
-        const rB = roleOrder[b.role] ?? 99;
-        if (rA !== rB) return rA - rB;
+        const pA = priorityPlayers[a.id] && priorityPlayers[a.id].length ? 1 : -1;
+        const pB = priorityPlayers[b.id] && priorityPlayers[b.id].length ? 1 : -1;
+        if (pA !== pB) return pB - pA;
         const mA = !a.id.includes("-alt");
         const mB = !b.id.includes("-alt");
         if (mA !== mB) return mA ? -1 : 1;
+        const rA = roleOrder[a.role] ?? 99;
+        const rB = roleOrder[b.role] ?? 99;
+        if (rA !== rB) return rA - rB;
         const cA = classOrder[a.class] ?? 99;
         const cB = classOrder[b.class] ?? 99;
         if (cA !== cB) return cA - cB;
@@ -271,7 +294,7 @@ function SplitsView({ toolbarProps = {}, autoSort, players, setPlayers, splitAmo
           sensitivity: "base",
         });
       });
-      
+
       const same =
         sorted.length === prev.length &&
         sorted.every((p, i) => p.id === prev[i].id);
@@ -280,17 +303,13 @@ function SplitsView({ toolbarProps = {}, autoSort, players, setPlayers, splitAmo
   };
 
   const handleResetSplits = () => {
-    setPlayers((prev) =>
-      prev.map((p) => ({ ...p, split: "Unassigned" })),
-    );
+    setPlayers((prev) => prev.map((p) => ({ ...p, split: "Unassigned" })));
   };
 
   return (
     <div className="splits-view">
       <Toolbar
         onSort={handleSortPlayers}
-        onImport={() => setShowImportExportModal("Import")}
-        onExport={() => setShowImportExportModal("Export")}
         splitAmount={splitAmount}
         onSplitAmountChange={setSplitAmount}
         onResetSplits={handleResetSplits}
@@ -313,17 +332,19 @@ function SplitsView({ toolbarProps = {}, autoSort, players, setPlayers, splitAmo
                 title={split.name}
                 split={split.id}
                 players={players.filter((p) => p.split === split.id)}
+                priorityPlayers={priorityPlayers}
               />
             ))}
           </div>
           <div className="splits-unassigned">
-          <SplitsSection
-            title="Unassigned"
-            split="Unassigned"
-            players={players.filter(
-              (p) => !splits.some((s) => s.id === p.split),
-            )}
-          />
+            <SplitsSection
+              title="Unassigned"
+              split="Unassigned"
+              players={players.filter(
+                (p) => !splits.some((s) => s.id === p.split),
+              )}
+              priorityPlayers={priorityPlayers}
+            />
           </div>
 
           <DragOverlay>

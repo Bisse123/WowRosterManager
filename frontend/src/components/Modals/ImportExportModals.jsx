@@ -8,12 +8,15 @@ function ImportExportModals({
   setRosterPlayers,
   SplitsPlayers,
   setSplitsPlayers,
+  priorities,
+  setPriorities,
   altSlotCount,
   setAltSlotCount,
   setSplitAmount,
 }) {
   const [string, setString] = useState("");
   const [pendingSplitsString, setPendingSplitsString] = useState("");
+  const [pendingPrioritiesString, setPendingPrioritiesString] = useState("");
   const textAreaRef = useRef(null);
 
   useEffect(() => {
@@ -30,7 +33,9 @@ function ImportExportModals({
         if (e.key === "Enter") {
           e.preventDefault();
           if (showModal === "Import") {
-            importPlayers(textAreaRef.current ? textAreaRef.current.value : string);
+            importPlayers(
+              textAreaRef.current ? textAreaRef.current.value : string,
+            );
           } else if (showModal === "Export") {
             copyExported();
           }
@@ -49,26 +54,29 @@ function ImportExportModals({
   const importPlayers = () => {
     let rosterString = "";
     let splitsString = "";
+    let prioritiesString = "";
     const inputString = textAreaRef.current ? textAreaRef.current.value : string;
     const lines = inputString.split(/\r?\n/);
-    let rosterStart = -1;
-    let splitsStart = -1;
+    // collect header positions so we can support any ordering
+    const headerPositions = {};
     for (let i = 0; i < lines.length; i++) {
-      if (lines[i].trim() === "Roster") rosterStart = i;
-      if (lines[i].trim() === "Splits") splitsStart = i;
+      const t = lines[i].trim();
+      if (t === "Roster" || t === "Splits" || t === "Priorities") {
+        headerPositions[t] = i;
+      }
     }
-    if (rosterStart !== -1 && splitsStart !== -1) {
-      // Both headers found
-      rosterString = lines.slice(rosterStart + 1, splitsStart).join("\n");
-      splitsString = lines.slice(splitsStart + 1).join("\n");
-    } else if (rosterStart !== -1) {
-      // Only Roster found
-      rosterString = lines.slice(rosterStart + 1).join("\n");
-    } else if (splitsStart !== -1) {
-      // Only Splits found
-      splitsString = lines.slice(splitsStart + 1).join("\n");
+    if (Object.keys(headerPositions).length > 0) {
+      const ordered = Object.entries(headerPositions).sort((a, b) => a[1] - b[1]);
+      for (let h = 0; h < ordered.length; h++) {
+        const name = ordered[h][0];
+        const start = ordered[h][1] + 1;
+        const end = h + 1 < ordered.length ? ordered[h + 1][1] : lines.length;
+        const section = lines.slice(start, end).join("\n");
+        if (name === "Roster") rosterString = section;
+        else if (name === "Splits") splitsString = section;
+        else if (name === "Priorities") prioritiesString = section;
+      }
     } else {
-      // No headers found, treat whole string as roster
       rosterString = inputString;
     }
     let importSuccess = true;
@@ -78,18 +86,26 @@ function ImportExportModals({
       alert("No roster data found to import.");
       importSuccess = false;
     }
-    if (importSuccess && splitsString.trim()) {
-      setPendingSplitsString(splitsString);
-    } else if (importSuccess) {
-      setShowModal(false);
+    if (importSuccess) {
+      if (splitsString.trim()) setPendingSplitsString(splitsString);
+      if (prioritiesString.trim()) setPendingPrioritiesString(prioritiesString);
+      if (!splitsString.trim() && !prioritiesString.trim()) setShowModal(false);
     }
   };
 
   // useEffect to import splits after SplitsPlayers are set from roster import
   useEffect(() => {
+    let importSplitsSuccess = true;
+    let importPrioritySuccess = true;
     if (pendingSplitsString) {
-      importSplitsPlayers(pendingSplitsString);
+      importSplitsSuccess = importSplitsPlayers(pendingSplitsString);
       setPendingSplitsString("");
+    }
+    if (pendingPrioritiesString) {
+      importPrioritySuccess = importPriorities(pendingPrioritiesString);
+      setPendingPrioritiesString("");
+    }
+    if (importSplitsSuccess && importPrioritySuccess) {
       setShowModal(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -98,12 +114,18 @@ function ImportExportModals({
   const exportPlayers = () => {
     // Export Roster section
     const rosterTSV = exportRosterPlayers();
-    // Export Splits section (placeholder logic, adjust as needed)
+    // Export Splits section
     const splitsTSV = exportSplitsPlayers();
+    // Export Priorities section
+    const prioritiesTSV = exportPriorities();
+
     // Combine with headers
     let exportString = "Roster\n" + rosterTSV;
     if (splitsTSV && splitsTSV.trim()) {
       exportString += "\nSplits\n" + splitsTSV;
+    }
+    if (prioritiesTSV && prioritiesTSV.trim()) {
+      exportString += "\nPriorities\n" + prioritiesTSV;
     }
     setString(exportString);
   };
@@ -150,6 +172,7 @@ function ImportExportModals({
         if (maxAlt > 0 && typeof setAltSlotCount === "function") {
           setAltSlotCount(maxAlt);
         }
+        
         return {
           id: `player-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           ...getInitialPlayerData(
@@ -205,7 +228,11 @@ function ImportExportModals({
         }
         const player = RosterPlayers.find((p) => p.mainName === name);
         if (player) {
-          if (player.mainClass === playerClass && player.mainRole === role) {
+          if (
+            player.mainName === charName &&
+            player.mainClass === playerClass &&
+            player.mainRole === role
+          ) {
             return {
               id: `${player.id}-main`,
               name: name,
@@ -246,6 +273,49 @@ function ImportExportModals({
       return true;
     } catch (err) {
       alert("Failed to import splits: " + (err.message || err));
+      return false;
+    }
+  };
+
+  const importPriorities = (prioritiesString) => {
+    try {
+      const lines = prioritiesString.trim().split(/\r?\n/);
+      if (lines.length < 2) throw new Error("No data rows found in Priorities");
+      const headers = lines[0].split("\t");
+      const idxToken = headers.indexOf("Token");
+      const idxPlayers = headers.indexOf("Players");
+      const idxTypes = headers.indexOf("Types");
+      if (idxToken === -1 || idxPlayers === -1 || idxTypes === -1) {
+        throw new Error("Priorities headers missing required columns");
+      }
+      const importedPriorities = {};
+      lines.slice(1).forEach((line) => {
+        const values = line.split("\t");
+        const tokenKey = values[idxToken] || "";
+        const playerNames = values[idxPlayers]
+          ? values[idxPlayers].split(",").map((n) => n.trim())
+          : [];
+        const types = values[idxTypes]
+          ? values[idxTypes].split(",").map((t) => t.trim().toLowerCase())
+          : [];
+        const playerIds = playerNames
+          .map((name) => {
+            const player = RosterPlayers.find((p) => p.mainName === name);
+            return player ? player.id : null;
+          }
+          )
+          .filter((id) => id !== null);
+        if (tokenKey) {
+          importedPriorities[tokenKey] = {
+            players: playerIds,
+            types: types,
+          };
+        }
+      });
+      setPriorities(importedPriorities);
+      return true;
+    } catch (err) {
+      alert("Failed to import priorities: " + (err.message || err));
       return false;
     }
   };
@@ -316,11 +386,31 @@ function ImportExportModals({
     return [headers.join("\t"), ...rows].join("\n");
   };
 
+  const exportPriorities = () => {
+    const tokenKeys = Object.keys(priorities);
+    if (tokenKeys.length === 0) return "";
+    const headers = ["Token", "Players", "Types"];
+    const rows = tokenKeys.map((tokenKey) => {
+      const tokenData = priorities[tokenKey];
+      const playerNames = (tokenData.players || [])
+        .map((id) => {
+          const player = RosterPlayers.find((p) => p.id === id);
+          return player ? player.mainName : null;
+        })
+        .filter((name) => name !== null)
+        .join(", ");
+      const types = (tokenData.types || []).join(", ");
+      return [tokenKey, playerNames, types].join("\t");
+    });
+    return [headers.join("\t"), ...rows].join("\n");
+  };
+
   if (!showModal) return null;
   const isImport = showModal === "Import";
   const isExport = showModal === "Export";
   return (
     <div
+      onMouseDown={() => setShowModal(false)}
       style={{
         position: "fixed",
         top: 0,
@@ -335,6 +425,7 @@ function ImportExportModals({
       }}
     >
       <div
+        onMouseDown={(e) => e.stopPropagation()}
         style={{
           background: "#222",
           padding: 32,
@@ -368,14 +459,14 @@ function ImportExportModals({
         />
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
           <button
-            className="btn-primary"
+            className="btn-add"
             style={{ padding: "10px 22px", fontWeight: 600, fontSize: 15 }}
             onClick={isImport ? importPlayers : copyExported}
           >
             {isImport ? `Import` : `Export`}
           </button>
           <button
-            className="btn-secondary"
+            className="btn-cancel"
             style={{ padding: "10px 22px", fontWeight: 600, fontSize: 15 }}
             onClick={() => setShowModal(false)}
           >

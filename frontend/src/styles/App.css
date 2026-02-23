@@ -12,7 +12,8 @@ body {
 }
 
 .roster-view,
-.splits-view {
+.splits-view,
+.priorities-view {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -75,15 +76,29 @@ body {
   transform: translateY(-2px);
 }
 
-.toolbar-btn.primary {
-  background: #2d5016;
-  border-color: #4a8025;
-  color: #7fef4f;
+.toolbar-btn.add {
+  background: #2d6b1f;
+  border-color: #7be24a;
+  color: #bfffbf;
 }
 
-.toolbar-btn.primary:hover {
-  background: #3b661e;
-  border-color: #7fef4f;
+.toolbar-btn.add:hover {
+  background: #318a24;
+  border-color: #9ef07a;
+  color: #ffffff;
+}
+
+.toolbar-btn.remove {
+  background: #4a1414;
+  border-color: #ff5c5c;
+  color: #ffd6d6;
+}
+
+.toolbar-btn.remove:hover {
+  background: #742020;
+  border-color: #ff7b7b;
+  color: #ffffff;
+  transform: translateY(-2px);
 }
 
 .toolbar-dropdown {
@@ -110,7 +125,8 @@ body {
 }
 
 .roster-content,
-.splits-content {
+.splits-content,
+.priorities-content {
   display: flex;
   flex-direction: row;
   flex: 1;
@@ -119,7 +135,8 @@ body {
 
 .roster-container,
 .splits-container,
-.splits-unassigned {
+.splits-unassigned,
+.priorities-container {
   height: calc(100vh - var(--toolbar-height, 64px));
   flex: 1 1 auto;
   display: flex;
@@ -133,7 +150,8 @@ body {
   flex-direction: column;
 }
 
-.splits-container {
+.splits-container,
+.priorities-container {
   flex-direction: row;
 }
 
@@ -142,7 +160,8 @@ body {
 }
 
 .roster-section,
-.splits-section {
+.splits-section,
+.priorities-section {
   width: 100%;
   height: 100%;
   background: #2a2a2a;
@@ -157,11 +176,13 @@ body {
   height: max-content;
 }
 
-.splits-section {
+.splits-section,
+.priorities-section {
   width: max-content;
 }
 
-.roster-scroll {
+.roster-scroll,
+.priorities-scroll {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -176,20 +197,36 @@ body {
 }
 
 .roster-header,
-.splits-header {
+.splits-header,
+.priorities-header {
   padding: 15px 20px;
   background: #3a3a3a;
   border-bottom: 2px solid #555;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   justify-content: space-between;
 }
 
+.priorities-subheader {
+  width: 100%;
+  padding: 10px;
+  background: #2a2a2a;
+}
+
 .roster-header h2,
-.splits-header h2 {
+.splits-header h2,
+.priorities-header h2 {
   color: #ffd700;
   font-size: 1.2em;
+}
+
+.roster-header h3,
+.splits-header h3,
+.priorities-header h3 {
+  color: #aaa;
+  font-size: 0.8em;
 }
 
 .count-badge {
@@ -203,24 +240,21 @@ body {
 }
 
 .roster-list,
-.splits-list {
+.splits-list,
+.priorities-list {
   padding: 15px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.roster-list {
+.roster-list,
+.priorities-list {
   width: 100%;
 }
 
 .splits-list {
   height: 100%;
-}
-
-
-.roster-list.drag-over {
-  background: #3a3a3a;
 }
 
 .empty-roster {
@@ -247,10 +281,36 @@ body {
   justify-content: space-between;
 }
 
-.roster-player-card:hover {
+.priorities-player-card {
+  background: #353535;
+  border: 2px solid #555;
+  border-radius: 6px;
+  position: relative;
+  padding: 8px 12px;
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: max-content;
+  width: 100%;
+}
+
+.roster-player-card:hover,
+.priorities-player-card:hover {
   background: #404040;
   border-color: #777;
   transform: translateY(-2px);
+}
+
+/* Highlight for priority targets */
+.priorities-player-card.is-priority {
+  border-color: #ffd700;
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.06), 0 0 0 3px rgba(255, 215, 0, 0.04) inset;
+}
+
+.priorities-player-card.is-priority .player-name {
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.12);
 }
 
 .roster-player-card.roster-player-card-header {
@@ -276,6 +336,29 @@ body {
   cursor: pointer;
   transition: all 0.3s;
   width: 100%;
+  justify-content: space-between;
+}
+
+.splits-player-card.is-priority {
+  border-color: #ffd700;
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.06), 0 0 0 3px rgba(255, 215, 0, 0.04) inset;
+}
+
+.splits-player-card-info {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.player-priority-items {
+  font-weight: bold;
+  font-size: 0.9em;
+  color: #ffd700;
+  display: flex;
+  margin: 0 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .splits-tokens {
@@ -354,6 +437,23 @@ body {
   align-items: center;
   gap: 10px;
   margin-right: 10px;
+}
+
+.priorities-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.priorities-table th,
+.priorities-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.priorities-table th {
+  text-align: left;
+  color: #ffd700;
+}
+.priorities-table td {
+  color: #e0e0e0;
 }
 
 .player-icon-img,
@@ -665,7 +765,7 @@ body {
   margin-top: 25px;
 }
 
-.btn-primary, .btn-secondary {
+.btn-add, .btn-remove, .btn-cancel {
   padding: 12px 25px;
   border: none;
   border-radius: 6px;
@@ -675,35 +775,55 @@ body {
   transition: all 0.3s;
 }
 
-.btn-primary {
+.btn-add {
   background: linear-gradient(135deg, #ffd700, #ffed4e);
   color: #1a1a1a;
 }
 
-.btn-primary:hover {
+.btn-add:hover {
   transform: scale(1.05);
 }
 
-.btn-secondary {
+.btn-remove {
+  background: linear-gradient(135deg, #ff5c5c, #ff7b7b);
+  color: #1a1a1a;
+}
+.btn-remove:hover {
+  transform: scale(1.05);
+}
+
+.btn-cancel {
   background: #3a3a3a;
   color: #e0e0e0;
 }
 
-.btn-secondary:hover {
+.btn-cancel:hover {
   background: #4a4a4a;
+}
+
+.btn-add:disabled,
+.btn-remove:disabled,
+.btn-cancel:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(40%) brightness(92%);
+  box-shadow: none;
+  transform: none;
 }
 
 
 @media (max-width: 1500px) {
   .roster-content,
-  .splits-content {
+  .splits-content,
+  .priorities-content {
     flex-direction: column;
     padding: 12px;
     gap: 16px;
   }
 
   .roster-container,
-  .splits-container {
+  .splits-container,
+  .priorities-container {
     order: 1;
     padding: 8px 0;
     flex-direction: column;
@@ -723,7 +843,8 @@ body {
   }
   
   .roster-section,
-  .splits-section {
+  .splits-section,
+  .priorities-section {
     margin-bottom: 12px;
   }
 }

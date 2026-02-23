@@ -18,7 +18,6 @@ function RosterView({
   setPlayers,
   altSlotCount = ALT_SLOT_COUNT,
   setAltSlotCount,
-  setShowImportExportModal,
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -354,8 +353,6 @@ function RosterView({
       <Toolbar
         onAddPlayer={() => setShowAddModal(true)}
         onSort={handleSortPlayers}
-        onImport={() => setShowImportExportModal("Import")}
-        onExport={() => setShowImportExportModal("Export")}
         altSlotCount={altSlotCount}
         onAltSlotCountChange={setAltSlotCount}
         {...toolbarProps}
@@ -419,6 +416,7 @@ function RosterView({
 
       {showAddModal && (
         <AddPlayerModal
+          show={showAddModal}
           onClose={() => setShowAddModal(false)}
           onAdd={handleAddPlayer}
           existingNames={players.map((p) => p.mainName)}
@@ -427,6 +425,7 @@ function RosterView({
       )}
       {showEditModal && editingPlayer && (
         <AddPlayerModal
+          show={showEditModal}
           onClose={() => {
             setShowEditModal(false);
             setEditingPlayer(null);
