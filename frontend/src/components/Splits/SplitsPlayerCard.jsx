@@ -30,14 +30,7 @@ function SplitsPlayerCard({ player, priorityItems }) {
   };
 
   const isPriority = Boolean(priorityItems && priorityItems.length);
-  if (isPriority) {
-    console.log(
-      "Rendering SplitsPlayerCard for",
-      player.name,
-      "with priority items:",
-      priorityItems,
-    );
-  }
+  
   const classColor = getClassColor(player.class);
 
   const mainRoleData = WOW_ROLES.find((r) => r.key === player.role) || null;

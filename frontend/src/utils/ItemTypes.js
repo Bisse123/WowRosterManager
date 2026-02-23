@@ -1,3 +1,5 @@
+import { WOW_CLASSES, WOW_ROLES } from "./wowClasses";
+
 export const ITEM_TYPES = {
   armor: {
     label: "Armor",
@@ -51,24 +53,46 @@ export const isClassEligibleForType = (cls, role, typeKey) => {
   if (!cls || !role) return false;
   const clsKey = String(cls).toLowerCase();
   const roleKey = String(role).toLowerCase();
-  console.log(`Checking eligibility for class: ${clsKey}, role: ${roleKey}, against typeKey: ${typeKey}`);
-  console.log(typeKey)
   if (typeKey.includes(clsKey)) return true;
-  if (typeKey.includes(roleKey)) return true;
-  for (const tk of typeKey) {
-    const eligibleForArmor = ITEM_TYPES.armor.types[tk];
-    if (eligibleForArmor && eligibleForArmor.includes(clsKey)) {
-      return true;
-    }
-    const eligibleForStats = ITEM_TYPES.stat.types[tk];
-    if (eligibleForStats && eligibleForStats.hasOwnProperty(clsKey)) {
-      const eligibleRoles = eligibleForStats[clsKey];
-      if (eligibleRoles && eligibleRoles.includes(roleKey)) {
-        return true;
+  
+  const roles = typeKey.filter((t) => WOW_ROLES.map((r) => r.key).includes(t));
+  const armor = typeKey.filter((t) =>
+    Object.keys(ITEM_TYPES.armor.types).includes(t),
+  );
+  const stats = typeKey.filter((t) =>
+    Object.keys(ITEM_TYPES.stat.types).includes(t),
+  );
+  let roleFound = roles.length === 0;
+  let armorEligible = armor.length === 0;
+  let statsEligible = stats.length === 0;
+  if (roleFound && armorEligible && statsEligible) return false;
+
+  if (roles.length && roles.includes(roleKey)) roleFound = true;
+
+  if (armor.length) {
+    for (const tk of armor) {
+      const eligibleClasses = ITEM_TYPES.armor.types[tk];
+      if (eligibleClasses && eligibleClasses.includes(clsKey)) {
+        armorEligible = true;
+        break;
       }
     }
   }
-  return false;
+
+  if (stats.length) {
+    for (const tk of stats) {
+      const eligibleForStats = ITEM_TYPES.stat.types[tk];
+      if (eligibleForStats && eligibleForStats.hasOwnProperty(clsKey)) {
+        const eligibleRoles = eligibleForStats[clsKey];
+        if (eligibleRoles && eligibleRoles.includes(roleKey)) {
+          statsEligible = true;
+          break;
+        } 
+      }
+    }
+  }
+
+  return roleFound && armorEligible && statsEligible;
 };
 
 export default ITEM_TYPES;
