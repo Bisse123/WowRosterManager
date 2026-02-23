@@ -8,7 +8,6 @@ function PrioritySection({
   priorities = {},
   togglePlayer,
 }) {
-  const tokenName = tokenKey.charAt(0).toUpperCase() + tokenKey.slice(1);
   const priorityPlayers = (priorities[tokenKey] && priorities[tokenKey].players) || [];
   const priorityTypes = (priorities[tokenKey] && priorities[tokenKey].types) || [];
 
@@ -33,8 +32,8 @@ function PrioritySection({
       const rA = roleOrder[a.mainRole] ?? 99;
       const rB = roleOrder[b.mainRole] ?? 99;
       if (rA !== rB) return rA - rB;
-      const cA = (a.mainClass || a.class || "").toLowerCase();
-      const cB = (b.mainClass || b.class || "").toLowerCase();
+      const cA = a.mainClass.toLowerCase();
+      const cB = b.mainClass.toLowerCase();
       if (cA !== cB) return cA.localeCompare(cB);
 
       const nA = a.mainName.toLowerCase();
@@ -46,7 +45,7 @@ function PrioritySection({
   return (
     <div className="priorities-section">
       <div className="priorities-header">
-        <h2>{tokenName}</h2>
+        <h2>{titleCase(tokenKey)}</h2>
         <div className="count">{priorityPlayers.length}</div>
       </div>
         <div className="priorities-header priorities-subheader">

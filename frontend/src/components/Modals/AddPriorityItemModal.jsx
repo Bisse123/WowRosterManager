@@ -42,7 +42,7 @@ function AddPriorityItemModal({ show, onClose, onAdd }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const trimmed = (titleCase(value) || "").trim();
+    const trimmed = (value || "").trim();
     const hasType =
       (selectedArmor && selectedArmor.length > 0) ||
       (selectedStats && selectedStats.length > 0) ||
@@ -57,10 +57,12 @@ function AddPriorityItemModal({ show, onClose, onAdd }) {
     }
 
     const types = [];
-    if (selectedArmor) types.push(selectedArmor);
-    if (selectedStats && selectedStats.length) types.push(...selectedStats);
-    if (selectedRoles && selectedRoles.length) types.push(...selectedRoles);
-    onAdd && onAdd(trimmed, types);
+    if (selectedArmor) types.push(String(selectedArmor).toLowerCase());
+    if (selectedStats && selectedStats.length)
+      types.push(...selectedStats.map((s) => String(s).toLowerCase()));
+    if (selectedRoles && selectedRoles.length)
+      types.push(...selectedRoles.map((r) => String(r).toLowerCase()));
+    onAdd && onAdd(trimmed.toLowerCase(), types);
     onClose && onClose();
   };
 

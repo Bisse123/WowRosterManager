@@ -8,6 +8,7 @@ import ImportExportModals from "./components/Modals/ImportExportModals";
 import AddPriorityItemModal from "./components/Modals/AddPriorityItemModal";
 import RemovePriorityItemModal from "./components/Modals/RemovePriorityItemModal";
 import { saveToLocalStorage, loadFromLocalStorage } from "./utils/storage";
+import titleCase from "./utils/general";
 
 export const ALT_SLOT_COUNT = 3;
 export const SPLIT_AMOUNT = 4;

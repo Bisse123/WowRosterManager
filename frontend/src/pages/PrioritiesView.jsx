@@ -1,4 +1,3 @@
-import { TOKEN_TYPES } from "../utils/tokenDetection";
 import PrioritySection from "../components/Priorities/PrioritiesSection";
 import Toolbar from "../components/Toolbar";
 

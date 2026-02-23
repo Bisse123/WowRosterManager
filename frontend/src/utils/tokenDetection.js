@@ -1,8 +1,8 @@
 export const TOKEN_TYPES = {
-    dreadful: ["Mage", "Priest", "Warlock"],
-    mystic: ["Demon Hunter", "Druid", "Monk", "Rogue"],
-    venerated: ["Evoker", "Hunter", "Shaman"],
-    zenith: ["Death Knight", "Paladin", "Warrior"],
+    dreadful: ["mage", "priest", "warlock"],
+    mystic: ["demon hunter", "druid", "monk", "rogue"],
+    venerated: ["evoker", "hunter", "shaman"],
+    zenith: ["death knight", "paladin", "warrior"],
 };
 
 export const getTokenCounts = (tokenType, players) => {

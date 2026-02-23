@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getInitialPlayerData } from "./AddPlayerModal";
+import titleCase from "../../utils/general";
 
 function ImportExportModals({
   showModal, // false | 'Import' | 'Export'
@@ -291,12 +292,12 @@ function ImportExportModals({
       const importedPriorities = {};
       lines.slice(1).forEach((line) => {
         const values = line.split("\t");
-        const tokenKey = values[idxToken] || "";
+        const tokenKey = (values[idxToken] || "").toLowerCase();
         const playerNames = values[idxPlayers]
           ? values[idxPlayers].split(",").map((n) => n.trim())
           : [];
         const types = values[idxTypes]
-          ? values[idxTypes].split(",").map((t) => t.trim().toLowerCase())
+          ? values[idxTypes].toLowerCase().split(",").map((t) => t.trim())
           : [];
         const playerIds = playerNames
           .map((name) => {
@@ -399,8 +400,8 @@ function ImportExportModals({
         })
         .filter((name) => name !== null)
         .join(", ");
-      const types = (tokenData.types || []).join(", ");
-      return [tokenKey, playerNames, types].join("\t");
+      const types = (tokenData.types || []).map((t) => titleCase(t)).join(", ");
+      return [titleCase(tokenKey), playerNames, types].join("\t");
     });
     return [headers.join("\t"), ...rows].join("\n");
   };
