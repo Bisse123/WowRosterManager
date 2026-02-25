@@ -439,23 +439,6 @@ body {
   margin: 0 10px;
 }
 
-.priorities-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.priorities-table th,
-.priorities-table td {
-  padding: 8px 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-}
-.priorities-table th {
-  text-align: left;
-  color: #ffd700;
-}
-.priorities-table td {
-  color: #e0e0e0;
-}
-
 .player-icon-img,
 .role-icon-img {
   width: 24px;
