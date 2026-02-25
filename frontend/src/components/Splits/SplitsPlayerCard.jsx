@@ -77,7 +77,11 @@ function SplitsPlayerCard({ player, priorityItems }) {
       </div>
       {isPriority && (
         <div className="player-priority-items">
-          {priorityItems.map((t) => titleCase(t)).join(", ")}
+          {priorityItems.map((t, i) => (
+            <div className="priority-item" key={i}>
+              {titleCase(t)}
+            </div>
+          ))}
         </div>
       )}
     </div>
