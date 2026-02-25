@@ -167,15 +167,19 @@ function App() {
       const splits = players.flatMap((player) => {
         const playerId = player.id;
         let mainSplit = "Unassigned";
+        let mainRole = player.mainRole;
         const foundMain = findSaved(`${playerId}-main`);
-        if (foundMain) mainSplit = foundMain.split;
+        if (foundMain) {
+          mainSplit = foundMain.split;
+          mainRole = foundMain.role;
+        }
         const playercharacters = [
           {
             id: `${playerId}-main`,
             name: player.mainName,
             charName: player.mainName,
             class: player.mainClass,
-            role: player.mainRole,
+            role: mainRole,
             split: mainSplit,
             status: player.status,
           },
@@ -187,14 +191,18 @@ function App() {
             player[`alt${i}Role`]
           ) {
             let altSplit = "Unassigned";
+            let altRole = player[`alt${i}Role`] || "";
             const foundAlt = findSaved(`${playerId}-alt${i}`);
-            if (foundAlt) altSplit = foundAlt.split;
+            if (foundAlt) {
+              altSplit = foundAlt.split;
+              altRole = foundAlt.role;
+            }
             playercharacters.push({
               id: `${playerId}-alt${i}`,
               name: player.mainName,
               charName: player[`alt${i}Name`] || "",
               class: player[`alt${i}Class`] || "",
-              role: player[`alt${i}Role`] || "",
+              role: altRole,
               split: altSplit,
               status: null,
             });

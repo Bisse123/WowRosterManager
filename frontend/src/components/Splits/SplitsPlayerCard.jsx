@@ -63,16 +63,6 @@ function SplitsPlayerCard({ player, priorityItems }) {
             className="player-icon-img"
             />
           ) : null}
-          {mainRoleData?.key && getRoleIconPath(mainRoleData.key) ? (
-            <img
-              src={getRoleIconPath(mainRoleData.key)}
-              alt={`${mainRoleData.name} icon`}
-              className="role-icon-img"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          ) : null}
         </div>
       </div>
       {isPriority && (

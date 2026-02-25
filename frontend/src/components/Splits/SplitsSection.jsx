@@ -5,6 +5,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import SplitsPlayerCard from "./SplitsPlayerCard";
+import { WOW_ROLES } from "../../utils/wowClasses";
 import { detectRaidBuffs, getBuffIconPath } from "../../utils/buffDetection";
 import { TOKEN_TYPES, getTokenCounts } from "../../utils/tokenDetection";
 import titleCase from "../../utils/general";
@@ -14,14 +15,22 @@ function SplitsSection({ title, split, players, priorityPlayers }) {
     id: split,
   });
 
-  const { setNodeRef: setEmptyRef } = useDroppable({
-    id: `${split}-empty`,
-  });
   const rosterRef = useRef(null);
   const setRefs = (node) => {
     rosterRef.current = node;
     setNodeRef(node);
   };
+
+  // create droppable hooks for each role within this split
+  const roleDroppables = WOW_ROLES.map((role) =>
+    useDroppable({ id: `${split}-${role.key}` }),
+  );
+
+  // group players by role for rendering inside each role section
+  const playersByRole = WOW_ROLES.reduce((acc, role) => {
+    acc[role.key] = players.filter((p) => p.role === role.key);
+    return acc;
+  }, {});
 
   const mainsAndTrials = players.filter(
     (p) => !p.id.includes("-alt") && p.status !== "Bench",
@@ -106,23 +115,42 @@ function SplitsSection({ title, split, players, priorityPlayers }) {
 
       <div className="splits-scroll">
         <div className="splits-list" ref={setRefs}>
-          <SortableContext
-            items={players.map((p) => p.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            {players.map((player) => (
-              <SplitsPlayerCard
-                key={player.id}
-                player={player}
-                priorityItems={priorityPlayers[player.id] || []}
-              />
-            ))}
-          </SortableContext>
-          {players.length === 0 && (
-            <div className="empty-roster" ref={setEmptyRef}>
-              Drag players here
+          {WOW_ROLES.map((role, i) => (
+            <div
+              key={role.key}
+              className="splits-role"
+              ref={roleDroppables[i].setNodeRef}
+              data-role={role.key}
+            >
+              <div className="splits-role-header">
+                <div className="player-spec">
+                  <div
+                    className={"role-badge"}
+                    style={{
+                      background: role.bg || undefined,
+                      color: role.color || undefined,
+                    }}
+                  >
+                    {role.name}
+                  </div>
+                </div>
+              </div>
+              <div className="splits-role-list">
+                <SortableContext
+                  items={playersByRole[role.key].map((p) => p.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {playersByRole[role.key].map((player) => (
+                    <SplitsPlayerCard
+                      key={player.id}
+                      player={player}
+                      priorityItems={priorityPlayers[player.id] || []}
+                    />
+                  ))}
+                </SortableContext>
+              </div>
             </div>
-          )}
+          ))}
         </div>
       </div>
     </div>

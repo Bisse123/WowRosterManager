@@ -20,12 +20,16 @@ function SplitsView({
     newSplit: null,
     oldSplit: null,
     index: null,
+    newRole: null,
+    oldRole: null,
   });
   const [swapTarget, setSwapTarget] = useState({
     id: null,
     newSplit: null,
     oldSplit: null,
     activeIndex: null,
+    newRole: null,
+    oldRole: null,
   });
   const [hoverRect, setHoverRect] = useState(null);
   const pointer = { current: { x: 0, y: 0 } };
@@ -84,6 +88,8 @@ function SplitsView({
         newSplit: found.split,
         oldSplit: found.split,
         index: idx,
+        newRole: found.role,
+        oldRole: found.role,
       });
     }
   };
@@ -95,10 +101,12 @@ function SplitsView({
       return;
     }
     let toSection = null;
+    let toRole = null;
     const activePlayer = players.find((p) => p.id === active.id);
     const overPlayer = players.find((p) => p.id === over.id);
     if (overPlayer) {
       toSection = overPlayer.split;
+      toRole = overPlayer.role;
       const hoveredEl = document.querySelector(`[data-player-id="${over.id}"]`);
       if (hoveredEl) {
         const r = hoveredEl.getBoundingClientRect();
@@ -109,71 +117,85 @@ function SplitsView({
           ...prev,
           newSplit: overPlayer.split,
           index: idx,
+          newRole: overPlayer.role,
         }));
       }
-    } else if (
-      splits.some((s) => s.id === over.id) ||
-      over.id.endsWith("-empty")
-    ) {
-      toSection = over.id.replace("-empty", "");
-      setHoverRect(null);
-      // Place at end of the split
-      const secPlayers = players.filter((p) => p.split === toSection);
-      setDragTarget((prev) => ({
-        ...prev,
-        newSplit: toSection,
-        index: secPlayers.length,
-      }));
+    } else {
+      // detect if we're hovering over a role droppable (ids like `${split}-${role}`)
+      const roleMatch = WOW_ROLES.find((r) => over.id.endsWith(`-${r.key}`));
+      if (roleMatch) {
+        toSection = over.id.replace(`-${roleMatch.key}`, "");
+        toRole = roleMatch.key;
+        setHoverRect(null);
+        const rolePlayers = players.filter(
+          (p) => p.split === toSection && p.role === roleMatch.key,
+        );
+        setDragTarget((prev) => ({
+          ...prev,
+          newSplit: toSection,
+          newRole: toRole,
+          index: rolePlayers.length,
+        }));
+      }
     }
 
-    if (activePlayer && toSection && activePlayer.split !== toSection) {
-      let found = players.find(
-        (p) =>
-          p.split === toSection &&
-          p.name === activePlayer.name &&
-          p.id !== activePlayer.id &&
-          p.split !== "Unassigned",
-      );
-      if (swapTarget && swapTarget.id) {
-        setPlayers((prev) => {
-          return prev.map((p) => {
-            if (p.id === swapTarget.id) {
-              return { ...p, split: swapTarget.oldSplit };
-            }
-            return p;
+    if (activePlayer && (toSection && activePlayer.split !== toSection || toRole && activePlayer.role !== toRole)) {
+      let found = null;
+      if (toSection && activePlayer.split !== toSection) {
+        found = players.find(
+          (p) =>
+            p.split === toSection &&
+            p.name === activePlayer.name &&
+            p.id !== activePlayer.id &&
+            p.split !== "Unassigned",
+        );
+        if (swapTarget && swapTarget.id) {
+          setPlayers((prev) => {
+            return prev.map((p) => {
+              if (p.id === swapTarget.id) {
+                return { ...p, split: toSection ? swapTarget.oldSplit : split, role: toRole ? swapTarget.oldRole : role };
+              }
+              return p;
+            });
           });
-        });
-      }
-      if (!found || (found && swapTarget && found.id === swapTarget.id)) {
-        setSwapTarget(null);
-        found = null;
-      }
-      if (found) {
-        // If swapTarget exists and is different, restore previous swapTarget to its original split
-        const secPlayers = players.filter(
-          (p) => p.split === activePlayer.split,
-        );
-        const activeIndex = secPlayers.findIndex(
-          (p) => p.id === activePlayer.id,
-        );
-        setSwapTarget({
-          id: found.id,
-          newSplit: dragTarget.oldSplit,
-          oldSplit: found.split,
-          activeIndex: activeIndex,
-        });
+        }
+        if (!found || (found && swapTarget && found.id === swapTarget.id)) {
+          setSwapTarget(null);
+          found = null;
+        }
+        if (found) {
+          // If swapTarget exists and is different, restore previous swapTarget to its original split
+          const secPlayers = players.filter(
+            (p) => p.split === activePlayer.split,
+          );
+          const activeIndex = secPlayers.findIndex(
+            (p) => p.id === activePlayer.id,
+          );
+          setSwapTarget({
+            id: found.id,
+            newSplit: dragTarget.oldSplit,
+            oldSplit: found.split,
+            activeIndex: activeIndex,
+            newRole: dragTarget.oldRole,
+            oldRole: found.role,
+          });
+        }
       }
       setPlayers((prev) => {
         return prev.map((p) => {
           if (p.id === activePlayer.id) {
-            return { ...p, split: toSection };
+            return { ...p, split: toSection || split, role: toRole || role };
           } else if (found && p.id === found.id) {
-            return { ...p, split: dragTarget.oldSplit };
+            return {
+              ...p,
+              split: dragTarget.oldSplit,
+              role: dragTarget.oldRole,
+            };
           }
           return p;
         });
       });
-      setDragTarget((prev) => ({ ...prev, newSplit: toSection }));
+      setDragTarget((prev) => ({ ...prev, newSplit: toSection || newSplit, newRole: toRole || newRole }));
     }
   };
 
@@ -194,6 +216,7 @@ function SplitsView({
       setDragTarget((prev) => ({
         ...prev,
         newSplit: overPlayer.split,
+        newRole: overPlayer.role,
         index: insertIndex,
       }));
     } catch (e) {
@@ -219,20 +242,25 @@ function SplitsView({
     }
     if (
       dragTarget &&
-      dragTarget.newSplit &&
-      Number.isInteger(dragTarget.index)
+      Number.isInteger(dragTarget.index) &&
+      (dragTarget.newSplit || dragTarget.newRole)
     ) {
       setPlayers((prev) => {
         const activePlayer = prev.find((p) => p.id === activeId);
         if (!activePlayer) return prev;
         const newSplit = dragTarget.newSplit;
+        const newRole = dragTarget.newRole;
         // Use swapTarget state for swap logic
         if (swapTarget && swapTarget.id) {
           return prev.map((p) => {
             if (p.id === activePlayer.id) {
-              return { ...p, split: newSplit };
+              return { ...p, split: newSplit, role: newRole };
             } else if (p.id === swapTarget.id) {
-              return { ...p, split: swapTarget.newSplit };
+              return {
+                ...p,
+                split: swapTarget.newSplit,
+                role: swapTarget.newRole,
+              };
             }
             return p;
           });
@@ -248,7 +276,7 @@ function SplitsView({
         let updated = [
           ...withoutActive.filter((p) => p.split !== newSplit),
           ...before,
-          { ...activePlayer, split: newSplit },
+          { ...activePlayer, split: newSplit, role: newRole },
           ...after,
         ];
         return updated;
