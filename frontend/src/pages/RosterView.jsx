@@ -43,7 +43,7 @@ function RosterView({
       { length: altSlotCount },
       (_, i) => `var(--alt${i + 1}-width, 120px)`,
     ).join(" ");
-    const columns = `75px var(--main-name-width, 200px) var(--main-class-width, 120px) var(--main-role-width, 120px) ${altCols} 300px 48px`;
+    const columns = `80px var(--main-name-width, 200px) var(--main-class-width, 120px) var(--main-role-width, 120px) ${altCols} 300px 48px`;
     document.documentElement.style.setProperty(
       "--roster-player-card-columns",
       columns,

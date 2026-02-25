@@ -6,6 +6,9 @@ export const TOKEN_TYPES = {
 };
 
 export const getTokenCounts = (tokenType, players) => {
-    const playersInType = players.filter((p) => TOKEN_TYPES[tokenType].includes(p.class));
+    const playersInType = players.filter((p) => {
+        const cls = String(p.class).toLowerCase();
+        return TOKEN_TYPES[tokenType].includes(cls)
+    });
     return playersInType.length;
 };

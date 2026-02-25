@@ -46,7 +46,23 @@ function SplitsPlayerCard({ player, priorityItems }) {
       tabIndex={0}
     >
       <div className="splits-player-card-info">
+
+        <div className="player-name" style={{ color: classColor }}>
+          {player.name}
+          {player.id.match(/-alt\d+$/)
+            ? player.charName
+              ? ` - ${player.charName}`
+              : ` - Alt`
+            : null}
+        </div>
         <div className="icons-horizontal">
+          {getClassIconPath(player.class) ? (
+            <img
+            src={getClassIconPath(player.class)}
+            alt={`${player.class} icon`}
+            className="player-icon-img"
+            />
+          ) : null}
           {mainRoleData?.key && getRoleIconPath(mainRoleData.key) ? (
             <img
               src={getRoleIconPath(mainRoleData.key)}
@@ -57,22 +73,6 @@ function SplitsPlayerCard({ player, priorityItems }) {
               }}
             />
           ) : null}
-          {getClassIconPath(player.class) ? (
-            <img
-              src={getClassIconPath(player.class)}
-              alt={`${player.class} icon`}
-              className="player-icon-img"
-            />
-          ) : null}
-        </div>
-
-        <div className="player-name" style={{ color: classColor }}>
-          {player.name}
-          {player.id.match(/-alt\d+$/)
-            ? player.charName
-              ? ` - ${player.charName}`
-              : ` - Alt`
-            : null}
         </div>
       </div>
       {isPriority && (
