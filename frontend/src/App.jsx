@@ -8,7 +8,6 @@ import ImportExportModals from "./components/Modals/ImportExportModals";
 import AddPriorityItemModal from "./components/Modals/AddPriorityItemModal";
 import RemovePriorityItemModal from "./components/Modals/RemovePriorityItemModal";
 import { saveToLocalStorage, loadFromLocalStorage } from "./utils/storage";
-import titleCase from "./utils/general";
 
 export const ALT_SLOT_COUNT = 3;
 export const SPLIT_AMOUNT = 4;
@@ -23,6 +22,7 @@ function App() {
   const [showImportExportModal, setShowImportExportModal] = useState(false);
   const [showAddPriorityModal, setShowAddPriorityModal] = useState(false);
   const [showRemovePriorityModal, setShowRemovePriorityModal] = useState(false);
+  const [showDetailedView, setShowDetailedView] = useState(false);
 
   const defaultPriorities = Object.keys(TOKEN_TYPES).reduce((acc, k) => {
     acc[k] = { players: {}, types: TOKEN_TYPES[k] || [] };
@@ -59,6 +59,8 @@ function App() {
         toggleAutoSort(savedMeta.autoSort);
       if (typeof savedMeta.currentView === "string")
         setCurrentView(savedMeta.currentView);
+      if (typeof savedMeta.showDetailedView === "boolean")
+        setShowDetailedView(savedMeta.showDetailedView);
     }
     initialisedFromStorage.current = true;
   }, []);
@@ -81,8 +83,9 @@ function App() {
       splitAmount,
       autoSort,
       currentView,
+      showDetailedView,
     });
-  }, [altSlotCount, splitAmount, autoSort, currentView]);
+  }, [altSlotCount, splitAmount, autoSort, currentView, showDetailedView]);
 
   useEffect(() => {
     const toolbar = document.querySelector(".toolbar");
@@ -257,6 +260,8 @@ function App() {
                   splitAmount={splitAmount}
                   setSplitAmount={setSplitAmount}
                   priorities={priorities}
+                  showDetailedView={showDetailedView}
+                  setShowDetailedView={setShowDetailedView}
                 />
               ) : (
                 <PrioritiesView

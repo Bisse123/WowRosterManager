@@ -14,6 +14,8 @@ function SplitsView({
   splitAmount = SPLIT_AMOUNT,
   setSplitAmount,
   priorities,
+  showDetailedView,
+  setShowDetailedView,
 }) {
   const [activeId, setActiveId] = useState(null);
   const [dragTarget, setDragTarget] = useState({
@@ -35,7 +37,6 @@ function SplitsView({
   const pointer = { current: { x: 0, y: 0 } };
   const [filteredPlayers, setFilteredPlayers] = useState(players || []);
   const [searchValue, setSearchValue] = useState("");
-  const [showDetailedView, setShowDetailedView] = useState(false);
 
   const splits = Array.from({ length: splitAmount }, (_, i) => ({
     id: `split-${i + 1}`,
@@ -58,10 +59,18 @@ function SplitsView({
       return (
         p.name.toLowerCase().includes(lower) ||
         p.class.toLowerCase().includes(lower) ||
-        (splits.some((s) => s.id === p.split) && p.role.toLowerCase().includes(lower)) ||
+        (splits.some((s) => s.id === p.split) &&
+          p.role.toLowerCase().includes(lower)) ||
         (lower === "main" && !p.id.includes("-alt")) ||
         (lower === "alt" && p.id.includes("-alt")) ||
-        (priorities && Object.keys(priorities).some((item) => item.toLowerCase().includes(lower) && Object.keys(priorities[item].players || {}).includes(p.id.replace("-main", ""))))
+        (priorities &&
+          Object.keys(priorities).some(
+            (item) =>
+              item.toLowerCase().includes(lower) &&
+              Object.keys(priorities[item].players || {}).includes(
+                p.id.replace("-main", ""),
+              ),
+          ))
       );
     });
     setFilteredPlayers(filtered);
@@ -75,7 +84,8 @@ function SplitsView({
       Object.keys(pr.players || {}).forEach((pid) => {
         const mainId = String(pid).endsWith("-main") ? pid : `${pid}-main`;
         priorityPlayers[mainId] = priorityPlayers[mainId] || [];
-        if (!priorityPlayers[mainId].includes(itemName)) priorityPlayers[mainId].push(itemName);
+        if (!priorityPlayers[mainId].includes(itemName))
+          priorityPlayers[mainId].push(itemName);
       });
     });
   }
@@ -133,7 +143,9 @@ function SplitsView({
       if (hoveredEl) {
         const r = hoveredEl.getBoundingClientRect();
         setHoverRect({ id: over.id, top: r.top, height: r.height });
-        const secPlayers = filteredPlayers.filter((p) => p.split === overPlayer.split);
+        const secPlayers = filteredPlayers.filter(
+          (p) => p.split === overPlayer.split,
+        );
         const idx = secPlayers.findIndex((p) => p.id === over.id);
         setDragTarget((prev) => ({
           ...prev,
@@ -165,7 +177,11 @@ function SplitsView({
       }
     }
 
-    if (activePlayer && (toSection && activePlayer.split !== toSection || toRole && activePlayer.role !== toRole)) {
+    if (
+      activePlayer &&
+      ((toSection && activePlayer.split !== toSection) ||
+        (toRole && activePlayer.role !== toRole))
+    ) {
       let found = null;
       if (toSection && activePlayer.split !== toSection) {
         found = players.find(
@@ -179,7 +195,11 @@ function SplitsView({
           setPlayers((prev) => {
             return prev.map((p) => {
               if (p.id === swapTarget.id) {
-                return { ...p, split: toSection ? swapTarget.oldSplit : split, role: toRole ? swapTarget.oldRole : role };
+                return {
+                  ...p,
+                  split: toSection ? swapTarget.oldSplit : split,
+                  role: toRole ? swapTarget.oldRole : role,
+                };
               }
               return p;
             });
@@ -221,7 +241,11 @@ function SplitsView({
           return p;
         });
       });
-      setDragTarget((prev) => ({ ...prev, newSplit: toSection || newSplit, newRole: toRole || newRole }));
+      setDragTarget((prev) => ({
+        ...prev,
+        newSplit: toSection || newSplit,
+        newRole: toRole || newRole,
+      }));
     }
   };
 
@@ -235,7 +259,9 @@ function SplitsView({
       const overId = hoverRect.id;
       const overPlayer = filteredPlayers.find((p) => p.id === overId);
       if (!overPlayer) return;
-      const secPlayers = filteredPlayers.filter((p) => p.split === overPlayer.split);
+      const secPlayers = filteredPlayers.filter(
+        (p) => p.split === overPlayer.split,
+      );
       const hoveredIndex = secPlayers.findIndex((p) => p.id === overId);
       let insertIndex = hoveredIndex;
       if (dMid > hMid) insertIndex += 1;
@@ -332,8 +358,10 @@ function SplitsView({
         const sA = splitOrder[a.split] ?? 99;
         const sB = splitOrder[b.split] ?? 99;
         if (sA !== sB) return sA - sB;
-        const pA = priorityPlayers[a.id] && priorityPlayers[a.id].length ? 1 : -1;
-        const pB = priorityPlayers[b.id] && priorityPlayers[b.id].length ? 1 : -1;
+        const pA =
+          priorityPlayers[a.id] && priorityPlayers[a.id].length ? 1 : -1;
+        const pB =
+          priorityPlayers[b.id] && priorityPlayers[b.id].length ? 1 : -1;
         if (pA !== pB) return pB - pA;
         const mA = !a.id.includes("-alt");
         const mB = !b.id.includes("-alt");
