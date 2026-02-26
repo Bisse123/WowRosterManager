@@ -284,31 +284,54 @@ function ImportExportModals({
       if (lines.length < 2) throw new Error("No data rows found in Priorities");
       const headers = lines[0].split("\t");
       const idxToken = headers.indexOf("Token");
-      const idxPlayers = headers.indexOf("Players");
       const idxTypes = headers.indexOf("Types");
-      if (idxToken === -1 || idxPlayers === -1 || idxTypes === -1) {
-        throw new Error("Priorities headers missing required columns");
+      const idxP1 = headers.indexOf("P1") !== -1 ? headers.indexOf("P1") : headers.indexOf("Priority1");
+      const idxP2 = headers.indexOf("P2") !== -1 ? headers.indexOf("P2") : headers.indexOf("Priority2");
+      const idxP3 = headers.indexOf("P3") !== -1 ? headers.indexOf("P3") : headers.indexOf("Priority3");
+      const idxP4 = headers.indexOf("P4") !== -1 ? headers.indexOf("P4") : headers.indexOf("Priority4");
+      const idxPlayers = headers.indexOf("Players"); // fallback legacy
+
+      if (idxToken === -1 || idxTypes === -1) {
+        throw new Error("Priorities headers missing required columns (Token, Types)");
       }
       const importedPriorities = {};
       lines.slice(1).forEach((line) => {
         const values = line.split("\t");
         const tokenKey = (values[idxToken] || "").toLowerCase();
-        const playerNames = values[idxPlayers]
-          ? values[idxPlayers].split(",").map((n) => n.trim())
-          : [];
-        const types = values[idxTypes]
+        const types = idxTypes !== -1 && values[idxTypes]
           ? values[idxTypes].toLowerCase().split(",").map((t) => t.trim())
           : [];
-        const playerIds = playerNames
-          .map((name) => {
+
+        const playersMap = {};
+        // If P1..P4 columns present, parse each into playersMap with corresponding priority
+        const addNamesFromColumn = (colIdx, priority) => {
+          if (colIdx === -1) return;
+          const names = values[colIdx] ? values[colIdx].split(",").map((n) => n.trim()).filter(Boolean) : [];
+          names.forEach((name) => {
             const player = RosterPlayers.find((p) => p.mainName === name);
-            return player ? player.id : null;
-          }
-          )
-          .filter((id) => id !== null);
+            if (player) playersMap[player.id] = priority;
+          });
+        };
+
+        if (idxP1 !== -1 || idxP2 !== -1 || idxP3 !== -1 || idxP4 !== -1) {
+          addNamesFromColumn(idxP1, 1);
+          addNamesFromColumn(idxP2, 2);
+          addNamesFromColumn(idxP3, 3);
+          addNamesFromColumn(idxP4, 4);
+        } else if (idxPlayers !== -1) {
+          // legacy 'Players' column: treat listed players as priority 1
+          const playerNames = values[idxPlayers]
+            ? values[idxPlayers].split(",").map((n) => n.trim()).filter(Boolean)
+            : [];
+          playerNames.forEach((name) => {
+            const player = RosterPlayers.find((p) => p.mainName === name);
+            if (player) playersMap[player.id] = 1;
+          });
+        }
+
         if (tokenKey) {
           importedPriorities[tokenKey] = {
-            players: playerIds,
+            players: playersMap,
             types: types,
           };
         }
@@ -390,18 +413,32 @@ function ImportExportModals({
   const exportPriorities = () => {
     const tokenKeys = Object.keys(priorities);
     if (tokenKeys.length === 0) return "";
-    const headers = ["Token", "Players", "Types"];
+    const headers = ["Token", "P1", "P2", "P3", "P4", "Types"];
     const rows = tokenKeys.map((tokenKey) => {
-      const tokenData = priorities[tokenKey];
-      const playerNames = (tokenData.players || [])
+      const tokenData = priorities[tokenKey] || {};
+      const playersMap = tokenData.players || {};
+      const pBuckets = { 1: [], 2: [], 3: [], 4: [] };
+      Object.keys(playersMap).forEach((id) => {
+        const pr = Number(playersMap[id]);
+        if (pr >= 1 && pr <= 4) pBuckets[pr].push(id);
+      });
+      const formatNames = (ids) => ids
         .map((id) => {
           const player = RosterPlayers.find((p) => p.id === id);
           return player ? player.mainName : null;
         })
         .filter((name) => name !== null)
         .join(", ");
+
       const types = (tokenData.types || []).map((t) => titleCase(t)).join(", ");
-      return [titleCase(tokenKey), playerNames, types].join("\t");
+      return [
+        titleCase(tokenKey),
+        formatNames(pBuckets[1]),
+        formatNames(pBuckets[2]),
+        formatNames(pBuckets[3]),
+        formatNames(pBuckets[4]),
+        types,
+      ].join("\t");
     });
     return [headers.join("\t"), ...rows].join("\n");
   };

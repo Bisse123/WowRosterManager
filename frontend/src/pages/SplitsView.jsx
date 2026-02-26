@@ -33,6 +33,9 @@ function SplitsView({
   });
   const [hoverRect, setHoverRect] = useState(null);
   const pointer = { current: { x: 0, y: 0 } };
+  const [filteredPlayers, setFilteredPlayers] = useState(players || []);
+  const [searchValue, setSearchValue] = useState("");
+  const [showDetailedView, setShowDetailedView] = useState(false);
 
   const splits = Array.from({ length: splitAmount }, (_, i) => ({
     id: `split-${i + 1}`,
@@ -45,12 +48,31 @@ function SplitsView({
     }
   }, [players, autoSort]);
 
+  useEffect(() => {
+    if (!searchValue) {
+      setFilteredPlayers(players || []);
+      return;
+    }
+    const lower = searchValue.toLowerCase();
+    const filtered = (players || []).filter((p) => {
+      return (
+        p.name.toLowerCase().includes(lower) ||
+        p.class.toLowerCase().includes(lower) ||
+        (splits.some((s) => s.id === p.split) && p.role.toLowerCase().includes(lower)) ||
+        (lower === "main" && !p.id.includes("-alt")) ||
+        (lower === "alt" && p.id.includes("-alt")) ||
+        (priorities && Object.keys(priorities).some((item) => item.toLowerCase().includes(lower) && Object.keys(priorities[item].players || {}).includes(p.id.replace("-main", ""))))
+      );
+    });
+    setFilteredPlayers(filtered);
+  }, [players, searchValue]);
+
   // Build a map of playerId -> list of priority item names (unique)
   const priorityPlayers = {};
   if (priorities) {
     Object.keys(priorities).forEach((itemName) => {
       const pr = priorities[itemName] || {};
-      (pr.players || []).forEach((pid) => {
+      Object.keys(pr.players || {}).forEach((pid) => {
         const mainId = String(pid).endsWith("-main") ? pid : `${pid}-main`;
         priorityPlayers[mainId] = priorityPlayers[mainId] || [];
         if (!priorityPlayers[mainId].includes(itemName)) priorityPlayers[mainId].push(itemName);
@@ -79,9 +101,9 @@ function SplitsView({
     handleDragStart._touchListener = onTouch;
 
     const draggedId = event.active.id;
-    const found = players.find((p) => p.id === draggedId);
+    const found = filteredPlayers.find((p) => p.id === draggedId);
     if (found) {
-      const idx = players
+      const idx = filteredPlayers
         .filter((p) => p.split === found.split)
         .findIndex((p) => p.id === draggedId);
       setDragTarget({
@@ -102,8 +124,8 @@ function SplitsView({
     }
     let toSection = null;
     let toRole = null;
-    const activePlayer = players.find((p) => p.id === active.id);
-    const overPlayer = players.find((p) => p.id === over.id);
+    const activePlayer = filteredPlayers.find((p) => p.id === active.id);
+    const overPlayer = filteredPlayers.find((p) => p.id === over.id);
     if (overPlayer) {
       toSection = overPlayer.split;
       toRole = overPlayer.role;
@@ -111,7 +133,7 @@ function SplitsView({
       if (hoveredEl) {
         const r = hoveredEl.getBoundingClientRect();
         setHoverRect({ id: over.id, top: r.top, height: r.height });
-        const secPlayers = players.filter((p) => p.split === overPlayer.split);
+        const secPlayers = filteredPlayers.filter((p) => p.split === overPlayer.split);
         const idx = secPlayers.findIndex((p) => p.id === over.id);
         setDragTarget((prev) => ({
           ...prev,
@@ -120,6 +142,10 @@ function SplitsView({
           newRole: overPlayer.role,
         }));
       }
+    } else if (over.id.endsWith("-unassigned")) {
+      toSection = "Unassigned";
+      toRole = dragTarget.oldRole;
+      setHoverRect(null);
     } else {
       // detect if we're hovering over a role droppable (ids like `${split}-${role}`)
       const roleMatch = WOW_ROLES.find((r) => over.id.endsWith(`-${r.key}`));
@@ -127,7 +153,7 @@ function SplitsView({
         toSection = over.id.replace(`-${roleMatch.key}`, "");
         toRole = roleMatch.key;
         setHoverRect(null);
-        const rolePlayers = players.filter(
+        const rolePlayers = filteredPlayers.filter(
           (p) => p.split === toSection && p.role === roleMatch.key,
         );
         setDragTarget((prev) => ({
@@ -207,9 +233,9 @@ function SplitsView({
       if (dMid == null) return;
       const hMid = hoverRect.top + hoverRect.height / 2;
       const overId = hoverRect.id;
-      const overPlayer = players.find((p) => p.id === overId);
+      const overPlayer = filteredPlayers.find((p) => p.id === overId);
       if (!overPlayer) return;
-      const secPlayers = players.filter((p) => p.split === overPlayer.split);
+      const secPlayers = filteredPlayers.filter((p) => p.split === overPlayer.split);
       const hoveredIndex = secPlayers.findIndex((p) => p.id === overId);
       let insertIndex = hoveredIndex;
       if (dMid > hMid) insertIndex += 1;
@@ -312,9 +338,11 @@ function SplitsView({
         const mA = !a.id.includes("-alt");
         const mB = !b.id.includes("-alt");
         if (mA !== mB) return mA ? -1 : 1;
-        const rA = roleOrder[a.role] ?? 99;
-        const rB = roleOrder[b.role] ?? 99;
-        if (rA !== rB) return rA - rB;
+        if (a.split !== "Unassigned" && b.split !== "Unassigned") {
+          const rA = roleOrder[a.role] ?? 99;
+          const rB = roleOrder[b.role] ?? 99;
+          if (rA !== rB) return rA - rB;
+        }
         const cA = classOrder[a.class] ?? 99;
         const cB = classOrder[b.class] ?? 99;
         if (cA !== cB) return cA - cB;
@@ -341,6 +369,10 @@ function SplitsView({
         splitAmount={splitAmount}
         onSplitAmountChange={setSplitAmount}
         onResetSplits={handleResetSplits}
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        showDetailedView={showDetailedView}
+        onDetailedViewChange={() => setShowDetailedView((v) => !v)}
         {...toolbarProps}
       />
       <div className="splits-content">
@@ -359,8 +391,10 @@ function SplitsView({
                 key={split.id}
                 title={split.name}
                 split={split.id}
-                players={players.filter((p) => p.split === split.id)}
+                players={filteredPlayers.filter((p) => p.split === split.id)}
+                priorities={priorities}
                 priorityPlayers={priorityPlayers}
+                showDetailedView={showDetailedView}
               />
             ))}
           </div>
@@ -368,7 +402,7 @@ function SplitsView({
             <SplitsSection
               title="Unassigned"
               split="Unassigned"
-              players={players.filter(
+              players={filteredPlayers.filter(
                 (p) => !splits.some((s) => s.id === p.split),
               )}
               priorityPlayers={priorityPlayers}
@@ -378,7 +412,7 @@ function SplitsView({
           <DragOverlay>
             {activeId ? (
               <SplitsPlayerCard
-                player={players.find((p) => p.id === activeId)}
+                player={filteredPlayers.find((p) => p.id === activeId)}
               />
             ) : null}
           </DragOverlay>

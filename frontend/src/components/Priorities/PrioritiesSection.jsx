@@ -6,9 +6,10 @@ function PrioritySection({
   tokenKey,
   players = [],
   priorities = {},
-  togglePlayer,
+  onPriorityChange,
 }) {
-  const priorityPlayers = (priorities[tokenKey] && priorities[tokenKey].players) || [];
+  const priorityPlayersMap = (priorities[tokenKey] && priorities[tokenKey].players) || {};
+  const priorityPlayers = Object.keys(priorityPlayersMap || {});
   const priorityTypes = (priorities[tokenKey] && priorities[tokenKey].types) || [];
 
   const isEligible = (player) => {
@@ -23,9 +24,9 @@ function PrioritySection({
     .sort((a, b) => {
       const statusOrder = { Main: 0, Trial: 1, Bench: 2 };
       const roleOrder = { melee: 0, ranged: 1, tank: 2, healer: 3 };
-      const inA = priorityPlayers.includes(a.id) ? 1 : -1;
-      const inB = priorityPlayers.includes(b.id) ? 1 : -1;
-      if (inA !== inB) return inB - inA;
+      const pA = Number(priorityPlayersMap[a.id] ?? 5);
+      const pB = Number(priorityPlayersMap[b.id] ?? 5);
+      if (pA !== pB) return pA - pB;
       const sA = statusOrder[a.status] ?? 99;
       const sB = statusOrder[b.status] ?? 99;
       if (sA !== sB) return sA - sB;
@@ -58,7 +59,8 @@ function PrioritySection({
             <PrioritiesPlayerCard
               key={p.id}
               player={p}
-              onClick={(id) => togglePlayer && togglePlayer(tokenKey, id)}
+              onPriorityChange={(id, val) => onPriorityChange && onPriorityChange(tokenKey, id, val)}
+              currentPriority={priorityPlayersMap[p.id]}
               isPriority={priorityPlayers.includes(p.id)}
             />
           ))}

@@ -5,12 +5,11 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import SplitsPlayerCard from "./SplitsPlayerCard";
-import { WOW_ROLES } from "../../utils/wowClasses";
+import { getClassColor, WOW_ROLES } from "../../utils/wowClasses";
 import { detectRaidBuffs, getBuffIconPath } from "../../utils/buffDetection";
-import { TOKEN_TYPES, getTokenCounts } from "../../utils/tokenDetection";
 import titleCase from "../../utils/general";
 
-function SplitsSection({ title, split, players, priorityPlayers }) {
+function SplitsSection({ title, split, players, priorities, priorityPlayers, showDetailedView }) {
   const { setNodeRef } = useDroppable({
     id: split,
   });
@@ -35,6 +34,7 @@ function SplitsSection({ title, split, players, priorityPlayers }) {
   const mainsAndTrials = players.filter(
     (p) => !p.id.includes("-alt") && p.status !== "Bench",
   );
+
   const tanks = players.filter((p) => p.role === "tank");
   const healers = players.filter((p) => p.role === "healer");
   const melee = players.filter((p) => p.role === "melee");
@@ -82,21 +82,60 @@ function SplitsSection({ title, split, players, priorityPlayers }) {
     <div className="splits-section">
       {split !== "Unassigned" && (
         <div>
-          <div className="splits-tokens">
-            {Object.keys(TOKEN_TYPES).map((tokenKey) => {
-              const count = getTokenCounts(tokenKey, mainsAndTrials) || 0;
-              const color =
-                count > 0
-                  ? { color: "rgba(0, 255, 0, 1)" }
-                  : { color: "rgba(255,0,0,1)" };
+          {showDetailedView && (
+          <div className="splits-items detailed">
+            {Object.keys(priorities || {}).map((itemName) => {
+              const item = priorities[itemName] || {};
+
+              const prioPlayers = Object.keys(item.players || {})
+                .filter((pid) => {
+                  const mainId = String(pid).endsWith("-main") ? pid : `${pid}-main`;
+                  return players.some((p) => p.id === mainId);
+                })
+                .sort((a, b) => {
+                  const pa = Number(item.players[a] ?? 5);
+                  const pb = Number(item.players[b] ?? 5);
+                  return pa - pb;
+                });
+              const count = prioPlayers.length || 0;
+              const color = count > 0 ? { color: "rgba(0, 255, 0, 1)" } : { color: "rgba(255,0,0,1)" };
               return (
-                <div key={tokenKey}>
-                  <label style={color}>{titleCase(tokenKey)}</label>
+                <div key={itemName} className="splits-item">
+                  <label style={color}>{titleCase(itemName)}</label>
+                  <label className="count">{count}</label>
+                    {prioPlayers.map((pid) => {
+                      const mainId = String(pid).endsWith("-main") ? pid : `${pid}-main`;
+                      const player = players.find((p) => p.id === mainId);
+                      if (!player) return null;
+                      const classColor = { color: getClassColor(player.class) };
+                      return (
+                        <div key={pid} className="priority-player" style={classColor}>
+                          {player.name}
+                        </div>
+                      );
+                    })}
+                </div>
+              );
+            })}
+          </div>
+        ) ||
+          <div className="splits-items">
+            {Object.keys(priorities || {}).map((itemName) => {
+              const item = priorities[itemName] || {};
+              const count = Object.keys(item.players || {}).filter((pid) => {
+                const mainId = String(pid).endsWith("-main") ? pid : `${pid}-main`;
+                return players.some((p) => p.id === mainId);
+              }).length || 0;
+              const color = count > 0 ? { color: "rgba(0, 255, 0, 1)" } : { color: "rgba(255,0,0,1)" };
+              return (
+                <div key={itemName}>
+                  <label style={color}>{titleCase(itemName)}</label>
                   <span className="count">{count}</span>
                 </div>
               );
             })}
           </div>
+}
 
           <div className="splits-coverage">
             <div className="splits-icons">{standardBuffIcons}</div>
@@ -107,15 +146,30 @@ function SplitsSection({ title, split, players, priorityPlayers }) {
 
       <div className="splits-header">
         <h2>{title}</h2>
+        
         <span className="count-badge">
-          {players.length} ({tanks.length} + {healers.length} + {melee.length} +{" "}
-          {ranged.length})
+          {players.length} 
+          {split !== "Unassigned" && (` (${tanks.length} + ${healers.length} + ${melee.length} + ${ranged.length})`)}
         </span>
       </div>
 
       <div className="splits-scroll">
         <div className="splits-list" ref={setRefs}>
-          {WOW_ROLES.map((role, i) => (
+          {split === "Unassigned" && (
+            <SortableContext
+              items={players.map((p) => p.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {players.map((player) => (
+                <SplitsPlayerCard
+                  key={player.id}
+                  player={player}
+                  priorityItems={priorityPlayers[player.id] || []}
+                />
+              ))}
+            </SortableContext>
+          ) ||
+          (WOW_ROLES.map((role, i) => (
             <div
               key={role.key}
               className="splits-role"
@@ -150,7 +204,8 @@ function SplitsSection({ title, split, players, priorityPlayers }) {
                 </SortableContext>
               </div>
             </div>
-          ))}
+          )))
+          }
         </div>
       </div>
     </div>

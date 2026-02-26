@@ -25,7 +25,7 @@ function App() {
   const [showRemovePriorityModal, setShowRemovePriorityModal] = useState(false);
 
   const defaultPriorities = Object.keys(TOKEN_TYPES).reduce((acc, k) => {
-    acc[k] = { players: [], types: TOKEN_TYPES[k] || [] };
+    acc[k] = { players: {}, types: TOKEN_TYPES[k] || [] };
     return acc;
   }, {});
   const [priorities, setPriorities] = useState(defaultPriorities);
@@ -110,13 +110,17 @@ function App() {
     handleSetSplitsPlayers();
   }, [rosterPlayers, altSlotCount]);
 
-  const togglePriority = (tokenKey, playerId) => {
+  const setPlayerPriority = (tokenKey, playerId, priority = 5) => {
     setPriorities((prev) => {
-      const data = prev[tokenKey] || { players: [], types: [] };
-      const list = new Set(data.players || []);
-      if (list.has(playerId)) list.delete(playerId);
-      else list.add(playerId);
-      return { ...prev, [tokenKey]: { ...data, players: Array.from(list) } };
+      const data = prev[tokenKey] || { players: {}, types: [] };
+      const playersMap = { ...(data.players || {}) };
+      const p = priority == null ? null : Number(priority);
+      if (p === null || p === 5) {
+        delete playersMap[playerId];
+      } else {
+        playersMap[playerId] = p;
+      }
+      return { ...prev, [tokenKey]: { ...data, players: playersMap } };
     });
   };
   
@@ -124,7 +128,7 @@ function App() {
     setPriorities((prev = {}) => {
       const next = {};
       Object.keys(prev).forEach((k) => {
-        next[k] = { players: [], types: prev[k]?.types ?? [] };
+        next[k] = { players: {}, types: prev[k]?.types ?? [] };
       });
       return next;
     });
@@ -134,7 +138,7 @@ function App() {
     if (!key || typeof key !== "string") return;
     setPriorities((prev) => {
       if (prev && Object.prototype.hasOwnProperty.call(prev, key)) return prev;
-      return { ...prev, [key]: { players: [], types: type } };
+      return { ...prev, [key]: { players: {}, types: type } };
     });
   };
 
@@ -269,7 +273,7 @@ function App() {
                   }}
                   players={rosterPlayers}
                   priorities={priorities}
-                  togglePlayer={togglePriority}
+                  onPriorityChange={setPlayerPriority}
                 />
               )
             }

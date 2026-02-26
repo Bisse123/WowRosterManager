@@ -17,6 +17,10 @@ function Toolbar({
   splitAmount = 3,
   onSplitAmountChange,
   onResetSplits,
+  searchValue,
+  onSearchChange,
+  showDetailedView,
+  onDetailedViewChange,
 }) {
   return (
     <div className="toolbar">
@@ -85,6 +89,16 @@ function Toolbar({
             🔄 Reset Splits
           </button>
         )}
+        
+        {currentView === "splits" && (
+          <button
+            onClick={onDetailedViewChange}
+            className="toolbar-btn priority"
+            title="Show Detailed View"
+          >
+            Priority {showDetailedView ? "Summary View" : "Detailed View"}
+          </button>
+        )}
 
         {currentView === "roster" && (
           <div>
@@ -150,22 +164,29 @@ function Toolbar({
       </div>
 
       <div className="toolbar-right">
-        <div>
-          <button
-            onClick={onImport}
-            className="toolbar-btn import"
-            title="Import Roster"
-          >
-            Import Roster
-          </button>
-          <button
-            onClick={onExport}
-            className="toolbar-btn export"
-            title="Export Roster"
-          >
-            Export Roster
-          </button>
-        </div>
+        {onSearchChange && (
+          <input
+            type="text"
+            placeholder="🔍 Search players..."
+            value={searchValue}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="search-input"
+          />
+        )}
+        <button
+          onClick={onImport}
+          className="toolbar-btn import"
+          title="Import Roster"
+        >
+          Import Roster
+        </button>
+        <button
+          onClick={onExport}
+          className="toolbar-btn export"
+          title="Export Roster"
+        >
+          Export Roster
+        </button>
       </div>
     </div>
   );

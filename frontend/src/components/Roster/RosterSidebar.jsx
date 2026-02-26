@@ -13,8 +13,6 @@ import {
 
 function Sidebar({
   players,
-  searchQuery,
-  onSearchChange,
   mainRosterSize = 0,
   benchRosterSize = 0,
 }) {
@@ -31,13 +29,6 @@ function Sidebar({
             {mainRosterSize} + {benchRosterSize}
           </span>
         </div>
-        <input
-          type="text"
-          placeholder="🔍 Search roster..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="search-input"
-        />
       </div>
 
       <div className="sidebar-section">

@@ -19,7 +19,8 @@ function RosterView({
   altSlotCount = ALT_SLOT_COUNT,
   setAltSlotCount,
 }) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredPlayers, setFilteredPlayers] = useState(players || []);
+  const [searchValue, setSearchValue] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [activeId, setActiveId] = useState(null);
@@ -28,9 +29,9 @@ function RosterView({
   const pointer = { current: { x: 0, y: 0 } };
   const [editingPlayer, setEditingPlayer] = useState(null);
 
-  const mainRoster = players.filter((p) => p.status === "Main");
-  const trialRoster = players.filter((p) => p.status === "Trial");
-  const benchRoster = players.filter((p) => p.status === "Bench");
+  const mainRoster = filteredPlayers.filter((p) => p.status === "Main");
+  const trialRoster = filteredPlayers.filter((p) => p.status === "Trial");
+  const benchRoster = filteredPlayers.filter((p) => p.status === "Bench");
 
   useEffect(() => {
     setTimeout(() => {
@@ -56,6 +57,32 @@ function RosterView({
     }
   }, [players, autoSort]);
 
+  useEffect(() => {
+    if (!searchValue) {
+      setFilteredPlayers(players || []);
+      return;
+    }
+    const lower = searchValue.toLowerCase();
+    const filtered = (players || []).filter((p) => {
+      const main = 
+        p.mainName.toLowerCase().includes(lower) ||
+        p.mainClass.toLowerCase().includes(lower) ||
+        p.mainRole.toLowerCase().includes(lower);
+      if (main) return true;
+      if (!lower.startsWith("alt")) return false;
+      const altLower = lower.replace("alt", "").trim();
+      for (let i = 1; i <= altSlotCount; i++) {
+        const alt = 
+          p[`alt${i}Name`] && p[`alt${i}Name`].toLowerCase().includes(altLower) ||
+          p[`alt${i}Class`] && p[`alt${i}Class`].toLowerCase().includes(altLower) ||
+          p[`alt${i}Role`] && p[`alt${i}Role`].toLowerCase().includes(altLower);
+        if (alt) return true;
+      }
+      return false;
+    });
+    setFilteredPlayers(filtered);
+  }, [players, searchValue]);
+
   const handleDragStart = (event) => {
     setActiveId(event.active.id);
     const onPointer = (e) => {
@@ -75,9 +102,9 @@ function RosterView({
     handleDragStart._touchListener = onTouch;
 
     const draggedId = event.active.id;
-    const found = players.find((p) => p.id === draggedId);
+    const found = filteredPlayers.find((p) => p.id === draggedId);
     if (found) {
-      const idx = players.findIndex((p) => p.id === draggedId);
+      const idx = filteredPlayers.findIndex((p) => p.id === draggedId);
       setDragTarget({ status: found.status, index: idx });
     }
   };
@@ -90,15 +117,15 @@ function RosterView({
     }
 
     let toSection = null;
-    const activePlayer = players.find((p) => p.id === active.id);
-    const overPlayer = players.find((p) => p.id === over.id);
+    const activePlayer = filteredPlayers.find((p) => p.id === active.id);
+    const overPlayer = filteredPlayers.find((p) => p.id === over.id);
     if (overPlayer) {
       toSection = overPlayer.status;
       const hoveredEl = document.querySelector(`[data-player-id="${over.id}"]`);
       if (hoveredEl) {
         const r = hoveredEl.getBoundingClientRect();
         setHoverRect({ id: over.id, top: r.top, height: r.height });
-        const secPlayers = players.filter(
+        const secPlayers = filteredPlayers.filter(
           (p) => p.status === overPlayer.status,
         );
         const idx = secPlayers.findIndex((p) => p.id === over.id);
@@ -124,7 +151,7 @@ function RosterView({
         secs[toSection] = [...secs[toSection], moved];
         return [...secs.Main, ...secs.Trial, ...secs.Bench];
       });
-      const secPlayers = players.filter(
+      const secPlayers = filteredPlayers.filter(
         (p) => p.status === toSection && p.id !== active.id,
       );
       setDragTarget({
@@ -147,7 +174,7 @@ function RosterView({
         secs[toSection] = [...secs[toSection], moved];
         return [...secs.Main, ...secs.Trial, ...secs.Bench];
       });
-      const secPlayers = players.filter(
+      const secPlayers = filteredPlayers.filter(
         (p) => p.status === toSection && p.id !== active.id,
       );
       setDragTarget({ toSection, index: secPlayers.length });
@@ -162,9 +189,9 @@ function RosterView({
       if (dMid == null) return;
       const hMid = hoverRect.top + hoverRect.height / 2;
       const overId = hoverRect.id;
-      const overPlayer = players.find((p) => p.id === overId);
+      const overPlayer = filteredPlayers.find((p) => p.id === overId);
       if (!overPlayer) return;
-      const secPlayers = players.filter((p) => p.status === overPlayer.status);
+      const secPlayers = filteredPlayers.filter((p) => p.status === overPlayer.status);
       const hoveredIndex = secPlayers.findIndex((p) => p.id === overId);
       let insertIndex = hoveredIndex;
       if (dMid > hMid) insertIndex += 1;
@@ -355,6 +382,8 @@ function RosterView({
         onSort={handleSortPlayers}
         altSlotCount={altSlotCount}
         onAltSlotCountChange={setAltSlotCount}
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
         {...toolbarProps}
       />
 
@@ -397,7 +426,7 @@ function RosterView({
             <DragOverlay>
               {activeId ? (
                 <RosterPlayerCard
-                  player={players.find((p) => p.id === activeId)}
+                  player={filteredPlayers.find((p) => p.id === activeId)}
                   altSlotCount={altSlotCount}
                 />
               ) : null}
@@ -407,8 +436,6 @@ function RosterView({
         <Sidebar
           className="Sidebar"
           players={mainRoster.concat(trialRoster)}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
           mainRosterSize={mainRoster.length + trialRoster.length}
           benchRosterSize={benchRoster.length}
         />

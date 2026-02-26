@@ -5,7 +5,7 @@ function PrioritiesView({
   toolbarProps,
   players = [],
   priorities = {},
-  togglePlayer,
+  onPriorityChange,
 }) {
   const priorityKeys = Object.keys(priorities);
 
@@ -24,7 +24,7 @@ function PrioritiesView({
               tokenKey={tk}
               players={mainPlayers.concat(trialPlayers)}
               priorities={priorities}
-              togglePlayer={togglePlayer}
+              onPriorityChange={onPriorityChange}
             />
           ))}
         </div>
