@@ -428,6 +428,7 @@ function SplitsView({
           </div>
           <div className="splits-unassigned">
             <SplitsSection
+              key="split-unassigned"
               title="Unassigned"
               split="Unassigned"
               players={filteredPlayers.filter(
