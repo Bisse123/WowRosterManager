@@ -211,6 +211,7 @@ function ImportExportModals({
         throw new Error("Splits headers missing required columns");
       }
       let maxSplit = 0;
+      let usedAlts = {};
       const splits = lines.slice(1).map((line) => {
         const values = line.split("\t");
         const name = values[idxName] || "";
@@ -231,8 +232,7 @@ function ImportExportModals({
         if (player) {
           if (
             player.mainName === charName &&
-            player.mainClass === playerClass &&
-            player.mainRole === role
+            player.mainClass === playerClass
           ) {
             return {
               id: `${player.id}-main`,
@@ -246,11 +246,15 @@ function ImportExportModals({
           for (let i = 1; i <= altSlotCount; i++) {
             if (
               player[`alt${i}Name`] === charName &&
-              player[`alt${i}Class`] === playerClass &&
-              player[`alt${i}Role`] === role
+              player[`alt${i}Class`] === playerClass
             ) {
+              const altId = `${player.id}-alt${i}`;
+              if (usedAlts[altId]) {
+                continue;
+              }
+              usedAlts[altId] = true;
               return {
-                id: `${player.id}-alt${i}`,
+                id: altId,
                 name: name,
                 charName: charName,
                 class: playerClass,
