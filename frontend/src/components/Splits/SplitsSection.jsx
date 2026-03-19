@@ -89,7 +89,7 @@ function SplitsSection({ title, split, players, priorities, priorityPlayers, sho
 
               const prioPlayers = Object.keys(item.players || {})
                 .filter((pid) => {
-                  const mainId = String(pid).endsWith("-main") ? pid : `${pid}-main`;
+                  const mainId = pid;
                   return players.some((p) => p.id === mainId);
                 })
                 .sort((a, b) => {
@@ -104,13 +104,13 @@ function SplitsSection({ title, split, players, priorities, priorityPlayers, sho
                   <label style={color}>{titleCase(itemName)}</label>
                   <label className="count">{count}</label>
                     {prioPlayers.map((pid) => {
-                      const mainId = String(pid).endsWith("-main") ? pid : `${pid}-main`;
+                      const mainId = pid;
                       const player = players.find((p) => p.id === mainId);
                       if (!player) return null;
                       const classColor = { color: getClassColor(player.class) };
                       return (
                         <div key={pid} className="priority-player" style={classColor}>
-                          {player.name}
+                          {player.name}{mainId.endsWith("-main") ? "" : " - Alt"}
                         </div>
                       );
                     })}

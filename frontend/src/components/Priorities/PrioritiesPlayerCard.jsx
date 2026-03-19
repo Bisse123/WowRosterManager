@@ -13,9 +13,9 @@ function PrioritiesPlayerCard({
 }) {
   if (!player) return null;
 
-  const classColor = getClassColor(player.mainClass || player.class);
+  const classColor = getClassColor(player.class);
   const mainRoleData =
-    WOW_ROLES.find((r) => r.key === (player.mainRole || player.role)) || null;
+    WOW_ROLES.find((r) => r.key === player.role) || null;
 
   const handleChange = (e) => {
     const val = Number(e.target.value);
@@ -37,15 +37,15 @@ function PrioritiesPlayerCard({
             onError={(e) => (e.currentTarget.style.display = "none")}
           />
         ) : null}
-        {getClassIconPath(player.mainClass || player.class) ? (
+        {getClassIconPath(player.class) ? (
           <img
-            src={getClassIconPath(player.mainClass || player.class)}
-            alt={`${player.mainClass || player.class} icon`}
+            src={getClassIconPath(player.class)}
+            alt={`${player.class} icon`}
             className="player-icon-img"
           />
         ) : null}
         <div className="player-name" style={{ color: classColor }}>
-          {player.mainName} - {player.status}
+          {player.name} - {player.status}
         </div>
       </div>
 

@@ -67,9 +67,7 @@ function SplitsView({
           Object.keys(priorities).some(
             (item) =>
               item.toLowerCase().includes(lower) &&
-              Object.keys(priorities[item].players || {}).includes(
-                p.id.replace("-main", ""),
-              ),
+              Object.keys(priorities[item].players || {}).includes(p.id),
           ))
       );
     });
@@ -82,7 +80,7 @@ function SplitsView({
     Object.keys(priorities).forEach((itemName) => {
       const pr = priorities[itemName] || {};
       Object.keys(pr.players || {}).forEach((pid) => {
-        const mainId = String(pid).endsWith("-main") ? pid : `${pid}-main`;
+        const mainId = pid;
         priorityPlayers[mainId] = priorityPlayers[mainId] || [];
         if (!priorityPlayers[mainId].includes(itemName))
           priorityPlayers[mainId].push(itemName);

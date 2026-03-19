@@ -47,8 +47,10 @@ function App() {
       setSplitsPlayers(savedSplits);
     }
     const savedPriorities = loadFromLocalStorage("wrm_priorities");
-    if (savedPriorities) setPriorities(savedPriorities);
+    if (savedPriorities) {
 
+      setPriorities(savedPriorities);
+}
     const savedMeta = loadFromLocalStorage("wrm_meta");
     if (savedMeta) {
       if (typeof savedMeta.altSlotCount === "number")
@@ -117,7 +119,7 @@ function App() {
     setPriorities((prev) => {
       const data = prev[tokenKey] || { players: {}, types: [] };
       const playersMap = { ...(data.players || {}) };
-      const p = priority == null ? null : Number(priority);
+      const p = Number(priority);
       if (p === null || p === 5) {
         delete playersMap[playerId];
       } else {
@@ -277,6 +279,7 @@ function App() {
                     onRemovePriorityItem: () => openRemovePriorityModal(),
                   }}
                   players={rosterPlayers}
+                  altSlotCount={altSlotCount}
                   priorities={priorities}
                   onPriorityChange={setPlayerPriority}
                 />

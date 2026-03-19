@@ -312,8 +312,20 @@ function ImportExportModals({
           if (colIdx === -1) return;
           const names = values[colIdx] ? values[colIdx].split(",").map((n) => n.trim()).filter(Boolean) : [];
           names.forEach((name) => {
-            const player = RosterPlayers.find((p) => p.mainName === name);
-            if (player) playersMap[player.id] = priority;
+            // Check if name has "-Alt X" suffix
+            const altMatch = name.match(/^(.+)-Alt\s+(\d+)$/);
+            if (altMatch) {
+              const baseName = altMatch[1];
+              const altNum = altMatch[2];
+              const player = RosterPlayers.find((p) => p.mainName === baseName);
+              if (player) playersMap[`${player.id}-alt${altNum}`] = priority;
+            } else {
+              // Main character
+              const player = RosterPlayers.find((p) => p.mainName === name);
+              if (!player) return;
+              const playerId = `${player.id}-main`;
+              playersMap[playerId] = priority;
+            }
           });
         };
 
@@ -328,8 +340,18 @@ function ImportExportModals({
             ? values[idxPlayers].split(",").map((n) => n.trim()).filter(Boolean)
             : [];
           playerNames.forEach((name) => {
-            const player = RosterPlayers.find((p) => p.mainName === name);
-            if (player) playersMap[player.id] = 1;
+            const altMatch = name.match(/^(.+)-Alt\s+(\d+)$/);
+            if (altMatch) {
+              const baseName = altMatch[1];
+              const altNum = altMatch[2];
+              const player = RosterPlayers.find((p) => p.mainName === baseName);
+              if (player) playersMap[`${player.id}-alt${altNum}`] = 1;
+            } else {
+              const player = RosterPlayers.find((p) => p.mainName === name);
+              if (!player) return;
+              const playerId = `${player.id}-main`;
+              playersMap[playerId] = 1;
+            }
           });
         }
 
@@ -428,8 +450,19 @@ function ImportExportModals({
       });
       const formatNames = (ids) => ids
         .map((id) => {
-          const player = RosterPlayers.find((p) => p.id === id);
-          return player ? player.mainName : null;
+          // Check if this is an alt ID (format: {playerId}-alt{X})
+          const altMatch = id.match(/^(.+)-alt(\d+)$/);
+          if (altMatch) {
+            const baseId = altMatch[1];
+            const altNum = altMatch[2];
+            const player = RosterPlayers.find((p) => p.id === baseId);
+            if (!player) return null;
+            return `${player.mainName }-Alt ${altNum}`;
+          } else {
+            // Main character
+            const player = RosterPlayers.find((p) => p.id === id || `${p.id}-main` === id);
+            return player ? player.mainName : null;
+          }
         })
         .filter((name) => name !== null)
         .join(", ");
